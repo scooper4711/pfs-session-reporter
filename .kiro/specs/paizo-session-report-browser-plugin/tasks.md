@@ -6,51 +6,51 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
 
 ## Tasks
 
-- [ ] 1. Scaffold project and configure build tooling
-  - [ ] 1.1 Create package.json with TypeScript, webpack, jest, fast-check, eslint dependencies
+- [x] 1. Scaffold project and configure build tooling
+  - [x] 1.1 Create package.json with TypeScript, webpack, jest, fast-check, eslint dependencies
     - Initialize with `name: "pfs-session-reporter"`, set up scripts for build, test, lint
     - Include devDependencies: typescript, webpack, webpack-cli, ts-loader, copy-webpack-plugin, jest, ts-jest, @types/jest, @types/chrome, fast-check, eslint, @typescript-eslint/parser, @typescript-eslint/eslint-plugin
     - _Requirements: 1.1_
-  - [ ] 1.2 Create tsconfig.json for Chrome extension TypeScript compilation
+  - [x] 1.2 Create tsconfig.json for Chrome extension TypeScript compilation
     - Target ES2020, module ESNext, strict mode enabled, outDir dist/, rootDir src/
     - Include DOM lib for content script and popup code
     - _Requirements: 1.1_
-  - [ ] 1.3 Create webpack.config.js with multiple entry points
+  - [x] 1.3 Create webpack.config.js with multiple entry points
     - Entry points: popup/popup.ts, background/service-worker.ts, content/content-script.ts
     - Use copy-webpack-plugin to copy manifest.json, popup.html, popup.css to dist/
     - Output to dist/ directory
     - _Requirements: 1.1, 1.5, 1.6, 1.7_
-  - [ ] 1.4 Create eslint configuration aligned with coding standards
+  - [x] 1.4 Create eslint configuration aligned with coding standards
     - Configure @typescript-eslint, complexity rules, no-any warnings
     - _Requirements: 1.1_
-  - [ ] 1.5 Create jest.config.js for TypeScript testing with ts-jest
+  - [x] 1.5 Create jest.config.js for TypeScript testing with ts-jest
     - Configure ts-jest preset, testMatch for .test.ts and .property.test.ts files
     - _Requirements: 1.1_
 
-- [ ] 2. Create manifest.json and extension shell
-  - [ ] 2.1 Create src/manifest.json with Manifest V3 configuration
+- [x] 2. Create manifest.json and extension shell
+  - [x] 2.1 Create src/manifest.json with Manifest V3 configuration
     - Declare permissions: clipboardRead, activeTab
     - Declare host_permissions for paizo.com session reporting URL pattern
     - Configure service_worker pointing to background/service-worker.js
     - Configure content_scripts targeting paizo.com reporting page with content/content-script.js
     - Configure browser_action/action with popup/popup.html
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
-  - [ ] 2.2 Create src/popup/popup.html with basic extension popup structure
+  - [x] 2.2 Create src/popup/popup.html with basic extension popup structure
     - Include extension name, description, Fill Form button, status/error display area
     - Minimum width 300px, clean readable style
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
-  - [ ] 2.3 Create src/popup/popup.css with popup styles
+  - [x] 2.3 Create src/popup/popup.css with popup styles
     - Clean, readable visual style consistent with browser extension conventions
     - Loading indicator styles, error/success message styles
     - _Requirements: 13.3, 13.4, 12.4_
 
-- [ ] 3. Implement shared types and constants
-  - [ ] 3.1 Create src/shared/types.ts with SessionReport, SignUp, BonusRep, PendingReport, ValidationResult, Phase interfaces
+- [-] 3. Implement shared types and constants
+  - [x] 3.1 Create src/shared/types.ts with SessionReport, SignUp, BonusRep, PendingReport, ValidationResult, Phase interfaces
     - Define all interfaces per the design data models section
     - Include PendingReport with report and timestamp fields
     - Define Phase type: 'session-type' | 'scenario' | 'fill-fields' | 'complete'
     - _Requirements: 2.3, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2_
-  - [ ] 3.2 Create src/constants/selectors.ts with all Paizo form DOM selectors
+  - [-] 3.2 Create src/constants/selectors.ts with all Paizo form DOM selectors
     - Define SELECTORS object with all form field selectors per design
     - Include player row template functions (playerNumber, characterNumber, etc.)
     - Define STORAGE_KEY, TIMEOUT_MS, GAME_SYSTEM_TO_SELECT_VALUE constants
@@ -62,13 +62,13 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Try raw JSON parse first; on failure, try base64 decode then JSON parse
     - Return parsed SessionReport or null on failure
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
-  - [ ]* 4.2 Write property tests for clipboard parser (src/shared/clipboard-parser.property.test.ts)
+  - [ ] 4.2 Write property tests for clipboard parser (src/shared/clipboard-parser.property.test.ts)
     - **Property 1: Clipboard data round-trip**
     - **Validates: Requirements 2.6**
-  - [ ]* 4.3 Write property test for dual format acceptance (src/shared/clipboard-parser.property.test.ts)
+  - [ ] 4.3 Write property test for dual format acceptance (src/shared/clipboard-parser.property.test.ts)
     - **Property 2: Clipboard parser accepts both raw JSON and base64**
     - **Validates: Requirements 2.2, 2.3**
-  - [ ]* 4.4 Write property test for invalid data rejection (src/shared/clipboard-parser.property.test.ts)
+  - [ ] 4.4 Write property test for invalid data rejection (src/shared/clipboard-parser.property.test.ts)
     - **Property 3: Invalid clipboard data rejection**
     - **Validates: Requirements 2.4**
 
@@ -78,10 +78,10 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Collect all errors and return ValidationResult
     - Reject multiple isGM entries, unsupported gameSystem values
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
-  - [ ]* 5.2 Write property test for valid SessionReport acceptance (src/shared/validation.property.test.ts)
+  - [ ] 5.2 Write property test for valid SessionReport acceptance (src/shared/validation.property.test.ts)
     - **Property 4: Validation accepts valid SessionReport objects**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7**
-  - [ ]* 5.3 Write property test for invalid SessionReport rejection (src/shared/validation.property.test.ts)
+  - [ ] 5.3 Write property test for invalid SessionReport rejection (src/shared/validation.property.test.ts)
     - **Property 5: Validation rejects SessionReport with missing required fields**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8**
 
@@ -93,7 +93,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Extract first 10 characters from ISO 8601 date string (handles time/timezone suffix)
     - Convert YYYY-MM-DD to MM/DD/YYYY format
     - _Requirements: 6.1, 6.3_
-  - [ ]* 7.2 Write property test for date format conversion (src/shared/date-utils.property.test.ts)
+  - [ ] 7.2 Write property test for date format conversion (src/shared/date-utils.property.test.ts)
     - **Property 8: Date format conversion**
     - **Validates: Requirements 6.1, 6.3**
 
@@ -103,7 +103,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - findFactionOptionValue searches select options for text starting with abbreviation + " - "
     - Return null for unknown factions
     - _Requirements: 8.1, 8.2, 8.3_
-  - [ ]* 8.2 Write property test for faction abbreviation mapping (src/shared/faction-map.property.test.ts)
+  - [ ] 8.2 Write property test for faction abbreviation mapping (src/shared/faction-map.property.test.ts)
     - **Property 10: Faction abbreviation mapping**
     - **Validates: Requirements 8.1, 8.2**
 
@@ -113,7 +113,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Search option text for "#N-MM:" pattern
     - Return matching option value or null
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
-  - [ ]* 9.2 Write property test for scenario number extraction and matching (src/shared/scenario-matcher.property.test.ts)
+  - [ ] 9.2 Write property test for scenario number extraction and matching (src/shared/scenario-matcher.property.test.ts)
     - **Property 7: Scenario number extraction and matching**
     - **Validates: Requirements 5.1, 5.2**
 
@@ -124,10 +124,10 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
   - [ ] 10.2 Create src/shared/timeout-utils.ts with isExpired function for PendingReport timeout check
     - Return true if Date.now() - timestamp > 30000
     - _Requirements: 15.1_
-  - [ ]* 10.3 Write property test for Paizo URL detection (src/shared/url-matcher.property.test.ts)
+  - [ ] 10.3 Write property test for Paizo URL detection (src/shared/url-matcher.property.test.ts)
     - **Property 11: Paizo URL detection**
     - **Validates: Requirements 11.1**
-  - [ ]* 10.4 Write property test for pending report timeout detection (src/shared/timeout-utils.property.test.ts)
+  - [ ] 10.4 Write property test for pending report timeout detection (src/shared/timeout-utils.property.test.ts)
     - **Property 12: Pending report timeout detection**
     - **Validates: Requirements 15.1**
 
@@ -136,7 +136,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - extractGmSignUp returns the SignUp where isGM === true, or null
     - extractPlayerSignUps returns all SignUp entries where isGM === false, preserving order
     - _Requirements: 7.2, 7.3, 7.4, 7.5, 10.1_
-  - [ ]* 11.2 Write property test for GM and player partitioning (src/shared/signup-utils.property.test.ts)
+  - [ ] 11.2 Write property test for GM and player partitioning (src/shared/signup-utils.property.test.ts)
     - **Property 9: GM and player partitioning from signUps**
     - **Validates: Requirements 7.2, 7.3, 7.4, 10.1, 10.2**
 
@@ -173,7 +173,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Clear Pending_Report from sessionStorage on completion
     - Send success message to popup
     - _Requirements: 4.7, 6.1, 6.2, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.2, 8.3, 9.1, 9.2, 9.3, 9.4, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 14.1, 14.2, 14.3, 14.4_
-  - [ ]* 13.6 Write property test for phase detection (src/content/phase-detection.property.test.ts)
+  - [ ] 13.6 Write property test for phase detection (src/content/phase-detection.property.test.ts)
     - **Property 6: Phase detection correctness**
     - **Validates: Requirements 4.3, 4.5, 4.7**
 
@@ -209,7 +209,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
 
 ## Notes
 
-- Tasks marked with `*` are optional and can be skipped for faster MVP
+- All tasks including property tests are required
 - Each task references specific requirements for traceability
 - Checkpoints ensure incremental validation
 - Property tests validate universal correctness properties from the design document (Properties 1-12)

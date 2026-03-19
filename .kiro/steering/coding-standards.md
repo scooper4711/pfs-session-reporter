@@ -185,6 +185,27 @@ To maintain code quality and readability, all production code must adhere to the
 4. Use lookup tables or strategy patterns instead of long switch statements
 5. Break down complex functions into smaller, single-purpose functions
 
+**ESLint Enforcement**:
+
+The coding standards above MUST be enforced via ESLint rules in `eslint.config.mjs`. The ESLint configuration must match the severity of the standards:
+
+- **MUST rules use `'error'` severity** — these are hard limits that fail the build:
+  - `complexity` at max 15 → `'error'`
+  - `max-lines` at max 500 → `'error'`
+  - `@typescript-eslint/no-unused-vars` → `'error'` (with `argsIgnorePattern: '^_'` and `caughtErrorsIgnorePattern: '^_'` to allow intentionally unused parameters and catch bindings prefixed with underscore)
+- **SHOULD rules use `'warn'` severity** — these are soft limits that produce warnings:
+  - `max-lines-per-function` at max 50 → `'warn'`
+  - `@typescript-eslint/no-explicit-any` → `'warn'` (aligns with the TypeScript Type Safety standard — avoid `any` but allow it with justification)
+  - `no-console` → `'warn'` (allow `console.warn` and `console.error`; use proper logging or remove `console.log` before merging)
+
+The ESLint config structure must:
+- Exclude test files (`*.test.ts`, `*.pbt.test.ts`, `*.property.test.ts`) from production rules via `ignores`
+- Give test files their own config block with no file size or function length rules
+- Enable `project: './tsconfig.json'` in parserOptions for type-aware linting
+- Not add extra rules beyond what the coding standards document — the ESLint config should be a direct reflection of these standards, not a superset
+
+When the coding standards say "MUST", the ESLint rule must be `'error'`. When they say "SHOULD", the ESLint rule must be `'warn'`. Do not soften `'error'` rules to `'warn'` — that undermines the standard.
+
 **Exceptions**:
 - Test files are exempt from file size and function length limits only — all other coding standards still apply
 - Configuration files and type definition files are exempt

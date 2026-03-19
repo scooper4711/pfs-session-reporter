@@ -244,11 +244,17 @@ Before any `git push`, all tests MUST pass. Do NOT push code with failing tests.
 
 **Required steps before pushing**:
 1. Run `npm run lint` and verify no lint errors
-2. Run `npx jest --silent` and verify all tests pass
-3. If lint or tests fail, fix them before committing/pushing
-4. Only push when both lint and the full test suite are green
+2. Run `npx jest --coverage --silent` and verify all tests pass
+3. Verify code coverage meets or exceeds 80% for lines, branches, functions, and statements
+4. If lint, tests, or coverage fail, fix them before committing/pushing
+5. Only push when lint, the full test suite, and coverage thresholds are all green
 
-**This is a hard rule** — no exceptions. Broken tests on main break CI for everyone.
+**Code Coverage Requirements**:
+- Overall code coverage MUST be at least 80% across lines, branches, functions, and statements
+- Coverage is enforced via Jest's `coverageThreshold` configuration
+- SonarCloud also tracks coverage — PRs that drop below 80% will be flagged
+
+**This is a hard rule** — no exceptions. Broken tests or insufficient coverage on main break CI for everyone.
 
 ## Git Commit Standards
 

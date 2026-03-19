@@ -1,0 +1,35 @@
+name: Package Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test -- --silent
+
+      - run: npm run build
+
+      - name: Create extension zip
+        run: cd dist && zip -r ../pfs-session-reporter-${{ github.ref_name }}.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pfs-session-reporter-${{ github.ref_name }}.zip
+          generate_release_notes: true

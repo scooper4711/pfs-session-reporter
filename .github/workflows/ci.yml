@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -22,7 +24,7 @@ jobs:
 
       - run: npm run lint
 
-      - run: npm test -- --silent
+      - run: npx jest --coverage --silent
 
       - run: npm run build
 
@@ -32,3 +34,8 @@ jobs:
           name: pfs-session-reporter-extension
           path: dist/
           if-no-files-found: error
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

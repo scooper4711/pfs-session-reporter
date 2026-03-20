@@ -1,5 +1,12 @@
 # PFS Session Reporter
 
+[![CI](https://github.com/scooper4711/pfs-session-reporter/actions/workflows/ci.yml/badge.svg)](https://github.com/scooper4711/pfs-session-reporter/actions/workflows/ci.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=scooper4711_pfs-session-reporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=scooper4711_pfs-session-reporter)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=scooper4711_pfs-session-reporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=scooper4711_pfs-session-reporter)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=scooper4711_pfs-session-reporter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=scooper4711_pfs-session-reporter)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/)
+
 A Chrome/Edge browser extension that automates filling in the [Paizo.com](https://paizo.com) Pathfinder Society session reporting form.
 
 ## What it does

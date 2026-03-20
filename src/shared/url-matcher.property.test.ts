@@ -3,16 +3,21 @@ import { isPaizoReportingPage } from './url-matcher';
 
 // --- Arbitraries ---
 
-const PAIZO_REPORTING_BASE = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent';
-const PAIZO_REPORTING_BASE_WWW = 'https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent';
+const PAIZO_WEBOBJECTS_BASE = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/';
+const PAIZO_WEBOBJECTS_BASE_WWW = 'https://www.paizo.com/cgi-bin/WebObjects/Store.woa/';
 
 function paizoReportingUrlArbitrary(): fc.Arbitrary<string> {
   return fc.oneof(
-    fc.constant(PAIZO_REPORTING_BASE),
-    fc.constant(PAIZO_REPORTING_BASE_WWW),
-    fc.webQueryParameters().map((query) => `${PAIZO_REPORTING_BASE}?${query}`),
-    fc.webFragments().map((fragment) => `${PAIZO_REPORTING_BASE}#${fragment}`),
-    fc.webQueryParameters().map((query) => `${PAIZO_REPORTING_BASE_WWW}?${query}`),
+    fc.constant(`${PAIZO_WEBOBJECTS_BASE}wa/PathfinderSociety/reportEvent`),
+    fc.constant(`${PAIZO_WEBOBJECTS_BASE_WWW}wa/PathfinderSociety/reportEvent`),
+    fc.webQueryParameters().map((query) =>
+      `${PAIZO_WEBOBJECTS_BASE}wa/PathfinderSociety/reportEvent?${query}`),
+    fc.webFragments().map((fragment) =>
+      `${PAIZO_WEBOBJECTS_BASE}wa/PathfinderSociety/reportEvent#${fragment}`),
+    // Dynamic WebObjects URLs after form navigation
+    fc.string({ minLength: 5, maxLength: 40, unit: 'grapheme-ascii' as const })
+      .map((suffix) => `${PAIZO_WEBOBJECTS_BASE}${suffix.replace(/ /g, '')}`),
+    fc.constant(`${PAIZO_WEBOBJECTS_BASE_WWW}160/wo/EtXfNp25Bq9yX4lrttbFJ0/2.17.2.1.3.1.1.1`),
   );
 }
 
@@ -30,6 +35,7 @@ function nonPaizoUrlArbitrary(): fc.Arbitrary<string> {
     fc.constant('https://paizo.com/organizedPlay/myAccount'),
     fc.constant('https://www.paizo.com/store'),
     fc.constant('https://example.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent'),
+    fc.constant('https://paizo.com/cgi-bin/other-app'),
   );
 }
 
@@ -78,5 +84,10 @@ describe('URL Matcher Properties', () => {
   it('Property 11c: isPaizoReportingPage matches the real Paizo reporting URL', () => {
     const realUrl = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent?event=v5748mkg4iody&destinationPath=organizedplay%2FmyAccount';
     expect(isPaizoReportingPage(realUrl)).toBe(true);
+  });
+
+  it('Property 11d: isPaizoReportingPage matches dynamic WebObjects URLs after form navigation', () => {
+    const dynamicUrl = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/160/wo/EtXfNp25Bq9yX4lrttbFJ0/2.17.2.1.3.1.1.1';
+    expect(isPaizoReportingPage(dynamicUrl)).toBe(true);
   });
 });

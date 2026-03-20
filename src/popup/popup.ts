@@ -166,6 +166,7 @@ async function handleFillClick(elements: PopupElements): Promise<void> {
     const report = await readAndParseClipboard();
     const pendingReport = createPendingReport(report);
     sendFillFormMessage(pendingReport);
+    hideLoading(elements);
   } catch (error: unknown) {
     const message = error instanceof Error
       ? error.message

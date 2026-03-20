@@ -8,8 +8,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*",
-    "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*"
+    "https://paizo.com/cgi-bin/WebObjects/Store.woa/*",
+    "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
@@ -17,8 +17,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*",
-        "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*"
+        "https://paizo.com/cgi-bin/WebObjects/Store.woa/*",
+        "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/*"
       ],
       "js": ["content/content-script.js"],
       "run_at": "document_idle"

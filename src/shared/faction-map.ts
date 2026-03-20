@@ -27,6 +27,9 @@ export const FACTION_ABBREVIATION_MAP: Record<string, string> = {
  * @returns The abbreviation code (e.g., "EA"), or null if the faction is unknown
  */
 export function getFactionAbbreviation(factionName: string): string | null {
+  if (!Object.prototype.hasOwnProperty.call(FACTION_ABBREVIATION_MAP, factionName)) {
+    return null;
+  }
   return FACTION_ABBREVIATION_MAP[factionName] ?? null;
 }
 

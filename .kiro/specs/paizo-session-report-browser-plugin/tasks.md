@@ -192,19 +192,19 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Clear existing Pending_Report if starting new workflow
     - _Requirements: 2.1, 2.4, 2.5, 3.8, 4.1, 11.1, 11.2, 11.3, 12.1, 12.2, 12.3, 12.4, 12.5, 13.1, 13.2, 15.2, 15.3_
 
-- [-] 16. Checkpoint - Commit content script, service worker, and popup
+- [x] 16. Checkpoint - Commit content script, service worker, and popup
   - Ensure all tests pass. Git commit with message: `feat: Add content script, service worker, and popup logic`
 
-- [ ] 17. Wire everything together and create .gitignore
-  - [~] 17.1 Create .gitignore for the project
+- [x] 17. Wire everything together and create .gitignore
+  - [x] 17.1 Create .gitignore for the project
     - Ignore node_modules/, dist/, coverage/, *.js.map
     - _Requirements: 1.1_
-  - [~] 17.2 Verify webpack build produces correct dist/ output
+  - [x] 17.2 Verify webpack build produces correct dist/ output
     - Ensure manifest.json, popup.html, popup.css are copied to dist/
     - Ensure all three entry points compile to dist/
     - _Requirements: 1.1, 1.5, 1.6, 1.7_
 
-- [ ] 18. Final checkpoint - Verify clean build and commit
+- [-] 18. Final checkpoint - Verify clean build and commit
   - Ensure all tests pass and extension builds cleanly. Git commit with message: `chore: Final wiring and build verification`
 
 ## Notes

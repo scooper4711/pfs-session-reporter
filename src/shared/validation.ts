@@ -32,14 +32,20 @@ export function validateSingleGmEntry(signUps: SignUp[]): string | null {
  */
 export function validateSignUp(signUp: SignUp, index: number): string[] {
   const errors: string[] = [];
-  const requiredFields: Array<{ field: keyof SignUp; label: string }> = [
-    { field: 'orgPlayNumber', label: 'orgPlayNumber' },
-    { field: 'characterNumber', label: 'characterNumber' },
+
+  if (typeof signUp.orgPlayNumber !== 'number') {
+    errors.push(`Sign-up entry ${index}: missing orgPlayNumber.`);
+  }
+  if (typeof signUp.characterNumber !== 'number') {
+    errors.push(`Sign-up entry ${index}: missing characterNumber.`);
+  }
+
+  const requiredStringFields: Array<{ field: keyof SignUp; label: string }> = [
     { field: 'characterName', label: 'characterName' },
     { field: 'faction', label: 'faction' },
   ];
 
-  for (const { field, label } of requiredFields) {
+  for (const { field, label } of requiredStringFields) {
     const value = signUp[field];
     if (typeof value !== 'string' || value.length === 0) {
       errors.push(`Sign-up entry ${index}: missing ${label}.`);
@@ -71,7 +77,7 @@ export function validateSessionReport(report: unknown): ValidationResult {
     errors.push('Session report is missing the scenario.');
   }
 
-  if (typeof r.gmOrgPlayNumber !== 'string' || r.gmOrgPlayNumber.length === 0) {
+  if (typeof r.gmOrgPlayNumber !== 'number') {
     errors.push('Session report is missing the GM org play number.');
   }
 

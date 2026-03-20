@@ -13,8 +13,8 @@ const bonusRepArbitrary: fc.Arbitrary<BonusRep> = fc.record({
 
 const validSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
   isGM: fc.constant(false),
-  orgPlayNumber: fc.string(ASCII_STRING_OPTS),
-  characterNumber: fc.string({ ...ASCII_STRING_OPTS, maxLength: 10 }),
+  orgPlayNumber: fc.integer({ min: 1, max: 999999 }),
+  characterNumber: fc.integer({ min: 1, max: 9999 }),
   characterName: fc.string({ ...ASCII_STRING_OPTS, maxLength: 50 }),
   consumeReplay: fc.boolean(),
   repEarned: fc.integer({ min: 0, max: 20 }),
@@ -23,8 +23,8 @@ const validSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
 
 const gmSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
   isGM: fc.constant(true as boolean),
-  orgPlayNumber: fc.string(ASCII_STRING_OPTS),
-  characterNumber: fc.string({ ...ASCII_STRING_OPTS, maxLength: 10 }),
+  orgPlayNumber: fc.integer({ min: 1, max: 999999 }),
+  characterNumber: fc.integer({ min: 1, max: 9999 }),
   characterName: fc.string({ ...ASCII_STRING_OPTS, maxLength: 50 }),
   consumeReplay: fc.boolean(),
   repEarned: fc.integer({ min: 0, max: 20 }),
@@ -51,7 +51,7 @@ function validSessionReportArbitrary(): fc.Arbitrary<SessionReport> {
     gameDate: validDateArbitrary(),
     gameSystem: fc.constant('PFS2E' as string),
     generateGmChronicle: fc.boolean(),
-    gmOrgPlayNumber: fc.string(ASCII_STRING_OPTS),
+    gmOrgPlayNumber: fc.integer({ min: 1, max: 999999 }),
     repEarned: fc.integer({ min: 0, max: 20 }),
     reportingA: fc.boolean(),
     reportingB: fc.boolean(),
@@ -132,10 +132,10 @@ describe('Validation Properties', () => {
       );
     });
 
-    it('rejects missing or empty gmOrgPlayNumber', () => {
+    it('rejects missing gmOrgPlayNumber', () => {
       fc.assert(
         fc.property(validSessionReportArbitrary(), (report) => {
-          const invalid = { ...report, gmOrgPlayNumber: '' };
+          const invalid = { ...report, gmOrgPlayNumber: undefined };
           const result = validateSessionReport(invalid);
           expect(result.valid).toBe(false);
           expect(result.errors.length).toBeGreaterThan(0);
@@ -193,14 +193,33 @@ describe('Validation Properties', () => {
       );
     });
 
-    it('rejects signUp with empty required fields', () => {
+    it('rejects signUp with empty required string fields', () => {
       fc.assert(
         fc.property(
           validSessionReportArbitrary(),
-          fc.constantFrom('orgPlayNumber', 'characterNumber', 'characterName', 'faction'),
+          fc.constantFrom('characterName', 'faction'),
           (report, fieldToEmpty) => {
             const signUps = report.signUps.map((s, i) =>
               i === 0 ? { ...s, [fieldToEmpty]: '' } : s,
+            );
+            const invalid = { ...report, signUps };
+            const result = validateSessionReport(invalid);
+            expect(result.valid).toBe(false);
+            expect(result.errors.length).toBeGreaterThan(0);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('rejects signUp with missing numeric fields', () => {
+      fc.assert(
+        fc.property(
+          validSessionReportArbitrary(),
+          fc.constantFrom('orgPlayNumber', 'characterNumber'),
+          (report, fieldToRemove) => {
+            const signUps = report.signUps.map((s, i) =>
+              i === 0 ? { ...s, [fieldToRemove]: undefined } : s,
             );
             const invalid = { ...report, signUps };
             const result = validateSessionReport(invalid);

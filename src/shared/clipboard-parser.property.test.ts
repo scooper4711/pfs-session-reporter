@@ -14,8 +14,8 @@ const bonusRepArbitrary: fc.Arbitrary<BonusRep> = fc.record({
 
 const signUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
   isGM: fc.boolean(),
-  orgPlayNumber: fc.string(ASCII_STRING_OPTS),
-  characterNumber: fc.string({ ...ASCII_STRING_OPTS, maxLength: 10 }),
+  orgPlayNumber: fc.integer({ min: 1, max: 999999 }),
+  characterNumber: fc.integer({ min: 1, max: 9999 }),
   characterName: fc.string({ ...ASCII_STRING_OPTS, maxLength: 50 }),
   consumeReplay: fc.boolean(),
   repEarned: fc.integer({ min: 0, max: 20 }),
@@ -33,7 +33,7 @@ function buildSessionReportArbitrary(): fc.Arbitrary<SessionReport> {
     ),
     gameSystem: fc.constant('PFS2E' as string),
     generateGmChronicle: fc.boolean(),
-    gmOrgPlayNumber: fc.string(ASCII_STRING_OPTS),
+    gmOrgPlayNumber: fc.integer({ min: 1, max: 999999 }),
     repEarned: fc.integer({ min: 0, max: 20 }),
     reportingA: fc.boolean(),
     reportingB: fc.boolean(),

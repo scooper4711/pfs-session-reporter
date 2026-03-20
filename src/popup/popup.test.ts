@@ -62,7 +62,7 @@ const VALID_SESSION_REPORT = JSON.stringify({
   gameDate: '2026-01-25',
   gameSystem: 'PFS2E',
   generateGmChronicle: true,
-  gmOrgPlayNumber: '12345',
+  gmOrgPlayNumber: 12345,
   repEarned: 0,
   reportingA: true,
   reportingB: true,
@@ -72,8 +72,8 @@ const VALID_SESSION_REPORT = JSON.stringify({
   signUps: [
     {
       isGM: true,
-      orgPlayNumber: '12345',
-      characterNumber: '2001',
+      orgPlayNumber: 12345,
+      characterNumber: 2001,
       characterName: 'GM Character',
       consumeReplay: false,
       repEarned: 4,
@@ -81,8 +81,8 @@ const VALID_SESSION_REPORT = JSON.stringify({
     },
     {
       isGM: false,
-      orgPlayNumber: '67890',
-      characterNumber: '2002',
+      orgPlayNumber: 67890,
+      characterNumber: 2002,
       characterName: 'Player One',
       consumeReplay: false,
       repEarned: 4,
@@ -226,7 +226,7 @@ describe('Popup Module', () => {
         gameDate: '',
         gameSystem: 'UNKNOWN',
         scenario: '',
-        gmOrgPlayNumber: '',
+        gmOrgPlayNumber: undefined,
         signUps: [],
         bonusRepEarned: [],
       });

@@ -246,11 +246,11 @@ function executePhase2(report: SessionReport): void {
  * Populates the GM-specific fields on the form.
  */
 function populateGmFields(report: SessionReport): void {
-  setInputWithChangeEvent(SELECTORS.gmNumber, report.gmOrgPlayNumber);
+  setInputWithChangeEvent(SELECTORS.gmNumber, String(report.gmOrgPlayNumber));
 
   const gmSignUp = extractGmSignUp(report.signUps);
   if (gmSignUp) {
-    setInputValue(SELECTORS.gmCharacterNumber, gmSignUp.characterNumber);
+    setInputValue(SELECTORS.gmCharacterNumber, String(gmSignUp.characterNumber));
     setSelectWithChangeEvent(SELECTORS.gmFactionSelect, gmSignUp.faction);
     setInputValue(SELECTORS.gmReputation, String(gmSignUp.repEarned));
   }
@@ -273,8 +273,8 @@ function populateDateAndFlags(report: SessionReport): void {
  * Populates a single player row on the form.
  */
 function populatePlayerRow(index: number, player: SignUp): void {
-  setInputWithChangeEvent(SELECTORS.playerNumber(index), player.orgPlayNumber);
-  setInputValue(SELECTORS.characterNumber(index), player.characterNumber);
+  setInputWithChangeEvent(SELECTORS.playerNumber(index), String(player.orgPlayNumber));
+  setInputValue(SELECTORS.characterNumber(index), String(player.characterNumber));
   setInputValue(SELECTORS.characterName(index), player.characterName);
   setSelectWithChangeEvent(SELECTORS.factionSelect(index), player.faction);
   setInputValue(SELECTORS.prestigePoints(index), String(player.repEarned));

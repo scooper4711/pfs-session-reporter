@@ -1,7 +1,7 @@
 export interface SignUp {
   isGM: boolean;
-  orgPlayNumber: string;
-  characterNumber: string;
+  orgPlayNumber: number;
+  characterNumber: number;
   characterName: string;
   consumeReplay: boolean;
   repEarned: number;
@@ -17,7 +17,7 @@ export interface SessionReport {
   gameDate: string;
   gameSystem: string;
   generateGmChronicle: boolean;
-  gmOrgPlayNumber: string;
+  gmOrgPlayNumber: number;
   repEarned: number;
   reportingA: boolean;
   reportingB: boolean;

@@ -8,8 +8,8 @@ const ASCII_STRING_OPTS = { minLength: 1, maxLength: 20, unit: 'grapheme-ascii' 
 
 const playerSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
   isGM: fc.constant(false),
-  orgPlayNumber: fc.string(ASCII_STRING_OPTS),
-  characterNumber: fc.string({ ...ASCII_STRING_OPTS, maxLength: 10 }),
+  orgPlayNumber: fc.integer({ min: 1, max: 999999 }),
+  characterNumber: fc.integer({ min: 1, max: 9999 }),
   characterName: fc.string({ ...ASCII_STRING_OPTS, maxLength: 50 }),
   consumeReplay: fc.boolean(),
   repEarned: fc.integer({ min: 0, max: 20 }),
@@ -18,8 +18,8 @@ const playerSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
 
 const gmSignUpArbitrary: fc.Arbitrary<SignUp> = fc.record({
   isGM: fc.constant(true as boolean),
-  orgPlayNumber: fc.string(ASCII_STRING_OPTS),
-  characterNumber: fc.string({ ...ASCII_STRING_OPTS, maxLength: 10 }),
+  orgPlayNumber: fc.integer({ min: 1, max: 999999 }),
+  characterNumber: fc.integer({ min: 1, max: 9999 }),
   characterName: fc.string({ ...ASCII_STRING_OPTS, maxLength: 50 }),
   consumeReplay: fc.boolean(),
   repEarned: fc.integer({ min: 0, max: 20 }),

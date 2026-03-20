@@ -140,31 +140,31 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - **Property 9: GM and player partitioning from signUps**
     - **Validates: Requirements 7.2, 7.3, 7.4, 10.1, 10.2**
 
-- [-] 12. Checkpoint - Commit all shared modules
+- [x] 12. Checkpoint - Commit all shared modules
   - Ensure all tests pass. Git commit with message: `feat: Add shared utility modules (date, faction, scenario, URL, timeout, signUp)`
 
-- [ ] 13. Implement content script with phase detection and form filling
-  - [~] 13.1 Create src/content/content-script.ts with onPageLoad entry point
+- [x] 13. Implement content script with phase detection and form filling
+  - [x] 13.1 Create src/content/content-script.ts with onPageLoad entry point
     - On load, check sessionStorage for Pending_Report
     - If present and not expired, call detectPhase and execute the appropriate phase
     - If expired, clear Pending_Report and stop
     - _Requirements: 4.2, 4.8, 15.1, 12.6_
-  - [~] 13.2 Implement detectPhase function in content-script.ts
+  - [x] 13.2 Implement detectPhase function in content-script.ts
     - Inspect Session_Type_Select value against GAME_SYSTEM_TO_SELECT_VALUE for report's gameSystem
     - Inspect Scenario_Select against report's scenario using ScenarioMatcher
     - Return 'session-type', 'scenario', or 'fill-fields' accordingly
     - _Requirements: 4.2, 4.3, 4.5, 4.7_
-  - [~] 13.3 Implement executePhase1 (session type selection) in content-script.ts
+  - [x] 13.3 Implement executePhase1 (session type selection) in content-script.ts
     - Set Session_Type_Select .value directly (no change event dispatch)
     - Call form.submit() programmatically
     - _Requirements: 4.3, 4.4, 14.1_
-  - [~] 13.4 Implement executePhase2 (scenario selection) in content-script.ts
+  - [x] 13.4 Implement executePhase2 (scenario selection) in content-script.ts
     - Use ScenarioMatcher to find matching option
     - Set Scenario_Select .value directly (no change event dispatch)
     - Call form.submit() programmatically
     - If no match found, clear Pending_Report and send error
     - _Requirements: 4.5, 4.6, 5.1, 5.2, 5.3, 5.4, 14.1_
-  - [~] 13.5 Implement executePhase3 (field population) in content-script.ts
+  - [x] 13.5 Implement executePhase3 (field population) in content-script.ts
     - Set date field with change event dispatch (for jQuery datepicker)
     - Set GM fields: gmNumber with change event, gmCharacterNumber, gmFactionSelect with change event, gmReputation
     - Set reporting flag checkboxes via .checked property
@@ -173,18 +173,18 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Clear Pending_Report from sessionStorage on completion
     - Send success message to popup
     - _Requirements: 4.7, 6.1, 6.2, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.2, 8.3, 9.1, 9.2, 9.3, 9.4, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 14.1, 14.2, 14.3, 14.4_
-  - [~] 13.6 Write property test for phase detection (src/content/phase-detection.property.test.ts)
+  - [x] 13.6 Write property test for phase detection (src/content/phase-detection.property.test.ts)
     - **Property 6: Phase detection correctness**
     - **Validates: Requirements 4.3, 4.5, 4.7**
 
-- [ ] 14. Implement background service worker
-  - [~] 14.1 Create src/background/service-worker.ts with message routing
+- [x] 14. Implement background service worker
+  - [x] 14.1 Create src/background/service-worker.ts with message routing
     - Listen for messages from popup, forward to content script via chrome.tabs.sendMessage
     - Listen for messages from content script, forward to popup via chrome.runtime.sendMessage
     - _Requirements: 1.5_
 
-- [ ] 15. Implement popup logic
-  - [~] 15.1 Create src/popup/popup.ts with handleFillClick, readAndParseClipboard, updateUI
+- [x] 15. Implement popup logic
+  - [x] 15.1 Create src/popup/popup.ts with handleFillClick, readAndParseClipboard, updateUI
     - On Fill Form click: read clipboard, parse, validate, store Pending_Report in sessionStorage via content script, send fillForm message
     - Check active tab URL via url-matcher; disable button if not on Paizo page
     - Display loading indicator during multi-phase workflow
@@ -192,7 +192,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Clear existing Pending_Report if starting new workflow
     - _Requirements: 2.1, 2.4, 2.5, 3.8, 4.1, 11.1, 11.2, 11.3, 12.1, 12.2, 12.3, 12.4, 12.5, 13.1, 13.2, 15.2, 15.3_
 
-- [ ] 16. Checkpoint - Commit content script, service worker, and popup
+- [-] 16. Checkpoint - Commit content script, service worker, and popup
   - Ensure all tests pass. Git commit with message: `feat: Add content script, service worker, and popup logic`
 
 - [ ] 17. Wire everything together and create .gitignore

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="popup.css">
+  <title>PFS Session Reporter</title>
+</head>
+<body>
+  <div class="container">
+    <h1>PFS Session Reporter</h1>
+    <p class="description">Fill the Paizo session reporting form from your clipboard data.</p>
+
+    <button id="fillButton" type="button">Fill Form</button>
+
+    <div id="loading" class="loading hidden" role="status" aria-live="polite">
+      <span class="spinner"></span>
+      <span>Filling form…</span>
+    </div>
+
+    <div id="status" class="status hidden" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

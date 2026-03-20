@@ -1,0 +1,671 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>paizo.com - Organized Play Event Reporter Page</title>
+    <link rel="stylesheet" href="/include/jquery-ui-1.10.3.custom.min.css" type="text/css" />
+    <LINK rel="stylesheet" type="text/css" href="https://paizo.com/include/stylesheet.css" />
+    <script>var sessionID = 'EtXfNp25Bq9yX4lrttbFJ0';</script>
+    <script>var instanceNumber = '156';</script>
+    <script>var sessionIdKey = 'sessionId';</script>
+    <script>var instanceIdKey = 'woinst';</script>
+    <script>var applicationName = 'Store';</script>
+    <script type="text/javascript">
+          //<![CDATA[
+
+      function isEmpty(obj) {
+      	if (obj == null || obj == undefined)
+      		return true;
+
+          return Object.keys(obj).length === 0;
+      }
+
+      function _sendRequest(url, data, callback, errorMsg) {
+      	var postUrl="/cgi-bin/WebObjects/" + applicationName + ".woa/wa/PathfinderSociety/" + url;
+      	var postData = data + "&" + sessionIdKey + "=" + encodeURIComponent(sessionID) + "&" + instanceIdKey + "=" + encodeURIComponent(instanceNumber);
+
+      	$.ajax(postUrl, {
+      		success: callback,
+      		data: postData,
+      		dataType: "json",
+      		type: "POST",
+      		error: function(x, status, error) { if (errorMsg) alert(errorMsg + error); }
+      	});
+      }
+
+          
+      function getGameMasterInfo() {
+      	var gameMasterID = $('#gameMasterNumber').val();
+      	var data="gameMasterNumber=" + encodeURIComponent(gameMasterID);
+      	_sendRequest("getGameMasterInfo", data, processGetGameMasterInfo, "There was a problem finding the game master: ");
+      }
+
+      function processGetGameMasterInfo(data, status, x) {
+      	if (!isEmpty(data) && data.gameMasterName != null) {
+      		$("#gameMasterName").val(data.gameMasterName);
+      	}
+      }
+
+            function getGameMasterCharacterInfo() {
+                var playerID = $('#gameMasterNumber').val();
+                var characterID = $('#gameMasterCharacterNumber').val();
+                var data="playerID=" + encodeURIComponent(playerID);
+                data += "&characterID=" + encodeURIComponent(characterID);
+                _sendRequest("getCharacterInfo", data, processGetGameMasterCharacterInfo, "There was a problem finding the character: ");
+            }
+
+      function processGetGameMasterCharacterInfo(data, status, x) {
+      	if (!isEmpty(data) && data.faction != null) {
+      		var ctl = $("#gmFactionSelect");
+      		selectFaction(ctl, data.faction);
+      	}
+      }
+      
+      function selectCanReplay(ctl, canReplay) {
+        ctl.disabled = !canReplay;
+      }
+
+           function getCharacterInfo(playerNum, canReplay) {
+                var playerID = $("#" + playerNum + 'playerNumber').val();
+                var characterID = $("#" + playerNum + 'characterNumber').val();
+                var data="playerID=" + encodeURIComponent(playerID) +
+                	"&characterID=" + encodeURIComponent(characterID) +
+                	"&playerNum=" + encodeURIComponent(playerNum) +
+                	"&canReplay=" + encodeURIComponent(canReplay);
+                _sendRequest("getCharacterInfo", data, processGetCharacterInfo, "There was a problem finding the character: ");
+            }
+
+      function processGetCharacterInfo(data, status, x) {
+      	if (!isEmpty(data) && data.playerNum != null) {
+      		if (data.characterName != null) {
+      			$("#" + data.playerNum + "characterName").val(data.characterName);
+      		}
+      		$("#" + data.playerNum + "characterType").val("2");
+      		if (data.faction != null) {
+      			var ctl = $("#" + data.playerNum + "FactionSelect");
+      			selectFaction(ctl, data.faction);
+      		}
+      		if (data.characterType != null) {
+      			document.getElementById(data.playerNum + "characterType").innerHTML = data.characterType;
+      			selectCharacterType(data);
+      		}
+      		if (data.canReplay != null) {
+      			var ctl = $("#" + data.playerNum + "consumesReplay");
+      			selectCanReplay(ctl, data.canReplay);
+      		}
+      	}
+      }
+
+      function selectCharacterType(data) {
+      	var scenarioTypeID = document.getElementById('ReportableSectionTypeP').innerHTML;
+          if(data.characterType == "PFC" && 
+          		(scenarioTypeID == 1 || scenarioTypeID == 4)){
+          	document.getElementById(data.playerNum + "characterType").style.color = "red";
+          	showConversionWarning();
+          } else {
+          	document.getElementById(data.playerNum + "characterType").style.color = "black";
+          	hideConversionWarning();
+          }
+      }
+
+      function hideConversionWarning() {
+      	document.getElementById('ConversionWarning').style.visibility = 'hidden';
+      }
+
+      function showConversionWarning() {
+      	document.getElementById('ConversionWarning').style.visibility = 'visible';
+      }
+
+      function selectFaction(ctl, faction) {
+      	faction = faction.toUpperCase();
+      	var opt = ctl.find("option:contains('" + faction + " - ')");
+      	if (opt.length) {
+      		ctl[0].selectedIndex = opt.index();
+      	}
+      }
+
+     
+          //]]>
+    </script>
+    <style>
+       	.cardGameChoiceBox {
+      display:inline-block;
+      width:55px;
+      min-height:48px;
+      vertical-align:bottom;
+      border: 1px solid black;
+      margin: 0;
+       	}
+    </style>
+  </head>
+  <body>
+    
+
+
+    <div align="center">
+      <br />
+      <div>
+  <a href="#" onclick="var t=this.parentNode.getElementsByTagName('div')[0];var s=this.parentNode.getElementsByTagName('div')[1];if(s.style.display!=''){s.style.display='';t.innerHTML='Hide Instructions'}else{s.style.display='none';t.innerHTML='Show Instructions'}return false;">
+    <div>Hide Instructions</div>
+  </a>
+  <div>
+        
+
+
+	<div class="bordered-box bb-float-center" style="text-align: left;">
+	
+	
+		<div class="bb-content">
+			 <DIV class="blurb">
+	
+	
+		<A name="v5748eaic9msv"></A>
+	
+	
+		
+		
+			<div class = "product-purchase-block">
+				
+				
+			</div>
+		
+		
+		
+		
+		
+  <h1>Instructions</h1>
+          <blockquote>
+<p>1. Type in event name (if there isn't one, typically there will be).</p>
+<p>2. As noted above, each session is forced numerically by the order in which you report it and isn't necessarily the order in which the sessions were played.</p>
+<p>3. Select the scenario of the first session you are reporting.</p>
+<p>4. Input the date on which the scenario was played, the GM's Pathfinder Society ID #, and the GM's name (which should auto-populate from the GM's Pathfinder Society ID # if that GM is registered in our system). If the GM is taking credit for that session as part of his GM Rewards, then add the GM's character number and that character's faction.</p>
+<p>5. Input the first character's Pathfinder Society ID # plus appropriate dash (-1, -2, etc) for 1st, 2nd, etc character.</p>
+<p>6. The character's name should auto-populate if you typed the ID # correctly and the character currently exists in our system (it's possible that it may not).</p>
+<p>7. The character's faction should auto-populate if you typed the ID # correctly and the character currently exists in our system (it's possible that it may not).<blockquote>
+	a. If the character you're reporting does not auto-populate, be sure to enter that character's name and faction correctly.</blockquote></p>
+<p>8. Input the number of prestige that character received.</p>
+<p>9. If that character died, mark them dead (this will gray out other entries for that character).</p>
+<p>10. Repeat steps 5 through 9 for each additional character that played in that session.</p>
+<p>11. If there are more characters at the table than space available in the session report, click "Add Extra Character."</p>
+<p>12. Click "Save Session," "Save and goto new session," "Save and Exit," "Cancel Changes," or "Cancel and Exit."<blockquote>
+	a. "Save Session" saves your data inputted so far and keeps you on that session's reporting screen.<br>
+	b. "Save and goto new session" saves the current session and moves to the next highest numbered session automatically.<br>
+	c. "Save and Exit" saves your progress and exits the reporting system entirely.<br>
+	d. "Cancel Changes" resets the session you are currently reporting but keeps you on the same session.<br>
+	e. "Cancel and Exit" cancels all changes and exits the reporting system entirely.</blockquote></p>
+<p>13. If a character or GM is marked as being disputed, that means that the reported player or game master has denied playing in or running this event. Please make sure that the reported data accurately reflects the player or GM that attended this session (not merely that it matches the session sheet) before confirming the report. If you are unsure who actually attended, please leave it disputed.</p>
+</blockquote>
+  
+
+		
+			
+		
+	
+	
+</DIV> 
+		</div>
+	
+	
+	
+	</div>
+
+      </div>
+</div>
+    </div>
+    <br />
+    
+
+
+	<div class="bordered-box bb-float-center">
+	
+	
+		<div class="bb-content">
+			
+      <form method="post" name="editObject" action="/cgi-bin/WebObjects/Store.woa/156/wo/EtXfNp25Bq9yX4lrttbFJ0/0.17.2.1.3.1.1.1">
+        <h1>
+          <span class="pull-left">
+            Bradenton PFS 2026
+            
+          </span>
+          <span class="pull-right">
+             New Session 
+            
+          </span>
+        </h1>
+        <div style="clear: both;">
+          <div class="pull-left">
+            <span class="form-prompt">Date</span>
+            <input size="10" id="sessionDate" title="The date this session was played" type="text" name="17.2.1.3.1.1.1.9" />
+          </div>
+          <div class="pull-right">
+            Find another session: 
+            <input size="4" title="Session number" type="text" name="17.2.1.3.1.1.1.11" />&nbsp;&nbsp;<input id="FindButton" type="submit" value="Find" name="17.2.1.3.1.1.1.13" />
+            <br />
+          </div>
+        </div>
+        <div style="clear: both;">
+        	  <p> <select onChange="this.form.submit()" name="17.2.1.3.1.1.1.15"><option value="WONoSelectionString">Select Type...</option><option selected="selected" value="0">Pathfinder Society (first edition)</option><option value="1">Pathfinder Adventure Card Society</option><option value="2">Pathfinder Society—Core (first edition)</option><option value="3">Starfinder Society (first edition)</option><option value="4">Pathfinder Society (second edition)</option><option value="5">Starfinder Society (second edition)</option></select></p>
+          
+          <p>
+            <select onChange="this.form.submit()" name="17.2.1.3.1.1.1.17"><option value="WONoSelectionString">Select a Scenario...</option><option value="0">#1: Silent Tide - #1: Silent Tide PDF</option><option value="1">#2: The Hydra's Fang Incident - #2: The Hydra's Fang Incident PDF</option><option value="2">#3: Murder on the Silken Caravan - #3: Murder on the Silken Caravan PDF</option><option value="3">#4: The Frozen Fingers of Midnight - #4: The Frozen Fingers of Midnight PDF</option><option value="4">#5: Mists of Mwangi (OGL/PFRPG) - #5: Mists of Mwangi</option><option value="5">#6: Black Waters - #6: Black Waters</option><option value="6">#7: Among the Living - #7: Among the Living</option><option value="7">#8: Slave Pits of Absalom - #8: Slave Pits of Absalom</option><option value="8">#9: Eye of the Crocodile King PDF (Retired) - #9: Eye of the Crocodile King</option><option value="9">#10: Blood at Dralkard Manor PDF (Retired) - #10: Blood at Dralkard Manor</option><option value="10">#11: The Third Riddle PDF (Retired) - #11: The Third Riddle PDF</option><option value="11">#12: Stay of Execution PDF (Retired) - #12: Stay of Execution PDF</option><option value="12">#13: The Prince of Augustana - #13: The Prince of Augustana PDF</option><option value="13">#14: The Many Fortunes of Grandmaster Torch - #14: The Many Fortunes of Grandmaster Torch PDF</option><option value="14">#15: The Asmodeus Mirage PDF (Retired) - #15: The Asmodeus Mirage PDF</option><option value="15">#16: To Scale the Dragon - #16: To Scale the Dragon PDF</option><option value="16">#17: Perils of the Pirate Pact - #17: Perils of the Pirate Pact PDF</option><option value="17">#18: The Trouble with Secrets PDF (Retired) - #18: The Trouble with Secrets PDF</option><option value="18">#19: Skeleton Moon PDF (Retired) - #19: Skeleton Moon PDF</option><option value="19">#20: King Xeros of Old Azlant - #20: King Xeros of Old Azlant PDF</option><option value="20">#21:  The Eternal Obelisk PDF (Retired) - #21:  The Eternal Obelisk PDF (Retired)</option><option value="21">#22: Fingerprints of the Fiend - #22: Fingerprints of the Fiend PDF</option><option value="22">#23: Tide of Morning - #23: Tide of Morning PDF</option><option value="23">#24: Decline of Glory - #24: Decline of Glory PDF</option><option value="24">#25: Hands of the Muted God PDF (Retired) - #25: Hands of the Muted God PDF</option><option value="25">#26: Lost at Bitter End - #26: Lost at Bitter End PDF</option><option value="26">#27: Our Lady of Silver - #27: Our Lady of Silver PDF</option><option value="27">#28: Lyrics of Extinction - #28: Lyrics of Extinction PDF</option><option value="28">#29:  The Devil We Know—Part I: Shipyard Rats - #29:  The Devil We Know—Part I: Shipyard Rats PDF</option><option value="29">#30:  The Devil We Know—Part II: Cassomir's Locker - #30:  The Devil We Know—Part II: Cassomir's Locker PDF</option><option value="30">#31: Sniper in the Deep - #31: Sniper in the Deep PDF</option><option value="31">#32: Drow of the Darklands Pyramid - #32: Drow of the Darklands Pyramid PDF</option><option value="32">#33: Assault on the Kingdom of the Impossible - #33: Assault on the Kingdom of the Impossible PDF</option><option value="33">#34: Encounter at the Drowning Stones - #34: Encounter at the Drowning Stones PDF</option><option value="34">#35: Voice in the Void - #35: Voice in the Void PDF</option><option value="35">#36: Echoes of the Everwar—Part I: The Prisoner of Skull Hill - #36: Echoes of the Everwar—Part 1: The Prisoner of Skull Hill PDF</option><option value="36">#37: The Beggar's Pearl - #37: The Beggar's Pearl PDF</option><option value="37">#38: No Plunder, No Pay - #38: No Plunder, No Pay PDF</option><option value="38">#39: The Citadel of Flame - #39: The Citadel of Flame PDF</option><option value="39">#40: Hall of Drunken Heroes - #40: Hall of Drunken Heroes PDF</option><option value="40">#41: The Devil We Know—Part III: Crypt of Fools - #41: The Devil We Know—Part III: Crypt of Fools PDF</option><option value="41">#42: Echoes of the Everwar—Part II: The Watcher of Ages - #42: Echoes of the Everwar—Part 2: The Watcher of Ages PDF</option><option value="42">#43: The Pallid Plague - #43: The Pallid Plague PDF</option><option value="43">#44: Echoes of the Everwar—Part III: Terror at Whistledown - #44: Echoes of the Everwar—Part 3: Terror at Whistledown PDF</option><option value="44">#45: Delirium's Tangle - #45: Delirium's Tangle PDF</option><option value="45">#46: Eyes of the Ten—Part I: Requiem for the Red Raven - #46: Eyes of the Ten—Part 1: Requiem for the Red Raven PDF</option><option value="46">#47: The Darkest Vengeance - #47: The Darkest Vengeance PDF</option><option value="47">#48: The Devil We Know—Part IV: Rules of the Swift - #48: The Devil We Know—Part 4: Rules of the Swift PDF</option><option value="48">#49: Among the Dead - #49: Among the Dead PDF</option><option value="49">#50: Fortune's Blight - #50: Fortune's Blight PDF</option><option value="50">#51: The City of Strangers—Part I: The Shadow Gambit - #51: The City of Shadows, Part I: The Shadow Gambit PDF</option><option value="51">#52: The City of Strangers—Part II: The Twofold Demise - #52: The City of Shadows, Part II: The Twofold Demise PDF</option><option value="52">#53: Echoes of the Everwar—Part IV: The Faithless Dead - #53: Echoes of the Everwar—Part IV: The Faithless Dead PDF</option><option value="53">#54: Eyes of the Ten—Part II: The Maze of the Open Road - #54: Eyes of the Ten—Part II: The Maze of the Open Road PDF</option><option value="54">#55: The Infernal Vault - #55: The Infernal Vault PDF</option><option value="55">#56: The Jester's Fraud - #56: The Jester's Fraud PDF</option><option value="56">#2-01: Before the Dawn—Part I: The Bloodcove Disguise - #2-01: Before the Dawn—Part I: The Bloodcove Disguise PDF</option><option value="57">#2-02: Before the Dawn—Part II: Rescue at Azlant Ridge - #2-02: Before the Dawn—Part II: Rescue at Azlant Ridge PDF</option><option value="58">#2-03: The Rebel's Ransom - #2-03: The Rebel's Ransom PDF</option><option value="59">#2-04: Shadows Fall on Absalom - #2-04: Shadows Fall on Absalom PDF</option><option value="60">#2-05: Eyes of the Ten—Part III: Red Revolution - #2-05: Eyes of the Ten—Part III: Red Revolution PDF</option><option value="61">#2-06: The Heresy of Man—Part I: The First Heresy - #2-06: The Heresy of Man—Part I: The First Heresy PDF</option><option value="62">#2-07: The Heresy of Man—Part II: Where Dark Things Sleep - #2-07: The Heresy of Man—Part II: Where the Dark Things Sleep PDF</option><option value="63">#2-08: The Sarkorian Prophecy - #2-08: The Sarkorian Prophecy PDF</option><option value="64">#2-09: The Heresy of Man—Part III: Beneath Forgotten Sands - #2-09: The Heresy of Man—Part III: Beneath Forgotten Sands PDF</option><option value="65">#2-10: Fury of the Fiend - #2-10: Fury of the Fiend PDF</option><option value="66">#2-11: The Penumbral Accords - #2-11: The Penumbra Accords PDF</option><option value="67">#2-12: Below the Silver Tarn - #2-12: Below the Silver Tarn PDF</option><option value="68">#2-13: Murder on the &lt;i&gt;Throaty Mermaid&lt;/i&gt; - #2-13: Murder on the Throaty Mermaid PDF</option><option value="69">#2-14: The Chasm of Screams - #2-14: Chasm of a Thousand Screams PDF</option><option value="70">#2-15: Shades of Ice—Part I: Written in Blood - #2-15: Shades of Ice—Part I: Written in Blood PDF</option><option value="71">#2-16: The Flesh Collector - #2-16: The Flesh Collector PDF</option><option value="72">#2-17: Shades of Ice—Part II: Exiles of Winter - #2-17: Shades of Ice—Part II: Exiles of Winter PDF</option><option value="73">#2-18: The Forbidden Furnace of Forgotten Koor - #2-18: The Forbidden Furnace of Forgotten Koor PDF</option><option value="74">#2-19: Shades of Ice—Part III: Keep of the Huscarl King - #2-19: Shades of Ice—Part III: Keep of the Huscarl King PDF</option><option value="75">#2-20: Wrath of the Accursed - #2-20: Wrath of the Accursed PDF</option><option value="76">#2-21: The Dalsine Affair - #2-21: The Dalsine Affair PDF</option><option value="77">#2-22: Eyes of the Ten—Part IV: Nothing Ventured, Nothing Gained - #2-22: Eyes of the Ten—Part IV: Nothing Ventured, Nothing Gained PDF</option><option value="78">#2-23: Shadow's Last Stand—Part I: At Shadow's Door - #2-23: Shadow's Last Stand—Part I: At Shadow's Door</option><option value="79">#2-24: Shadow's Last Stand—Part II: Web of Corruption - #2-24: Shadow's Last Stand—Part II: Web of Corruption</option><option value="80">#2-25: You Only Die Twice - #2-25: You Only Die Twice</option><option value="81">#2-26: The Mantis's Prey - #2-26: The Mantis's Prey</option><option value="82">PaizoCon 2011: Grand Melee 4711 A.R. - PaizoCon 2011 Grand Melee PDF</option><option value="83">Special: Year of the Shadow Lodge - Pathfinder Society Special: Year of the Shadow Lodge PDF</option><option value="84">#3-01: The Frostfur Captives - #3-01: The Frostfur Captives</option><option value="85">#3-02: Sewer Dragons of Absalom - #3-02: Sewer Dragons of Absalom</option><option value="86">#3-03: The Ghenett Manor Gauntlet - #3-03: The Ghenett Manor Gauntlet</option><option value="87">#3-04: The Kortos Envoy - #3-04: The Kortos Envoy</option><option value="88">#3-05: Tide of Twilight - #3-05: Tide of Twilight</option><option value="89">#3-06: Song of the Sea Witch - #3-06: Song of the Sea Witch</option><option value="90">#3-07: Echoes of the Overwatched - #3-07: Echoes of the Overwatched</option><option value="91">#3-08: Among the Gods - #3-08: Among the Gods</option><option value="92">#3-09: The Quest for Perfection—Part I: The Edge of Heaven - #3-09: The Quest for Perfection—Part I: The Edge of Heaven</option><option value="93">#3-10: The Immortal Conundrum - #3-10: The Immortal Conundrum</option><option value="94">#3-11: The Quest for Perfection—Part II: On Hostile Waters - #3-11: The Quest for Perfection—Part II: On Hostile Waters</option><option value="95">#3-12: Wonders in the Weave—Part I: The Dog Pharaoh's Tomb - #3-12: Wonders in the Weave—Part I: The Dog Pharaoh's Tomb</option><option value="96">#3-13: The Quest for Perfection—Part III: Defenders of Nesting Swallow - #3-13: The Quest for Perfection—Part III: Defenders of Nesting Swallow</option><option value="97">#3-14: Wonders in the Weave—Part II: Snakes in the Fold - #3-14: Wonders in the Weave—Part II: Snakes in the Fold</option><option value="98">#3-15: The Haunting of Hinojai - #3-15: The Haunting of Hinojai</option><option value="99">#3-16: The Midnight Mauler - #3-16: The Midnight Mauler</option><option value="100">#3-17: Red Harvest - #3-17: Red Harvest</option><option value="101">#3-18: The God's Market Gamble - #3-18: The God's Market Gamble</option><option value="102">#3-19: The Icebound Outpost - #3-19: The Icebound Outpost</option><option value="103">#3-20: The Rats of Round Mountain—Part I: The Sundered Path - #3-20: The Rats of Round Mountain—Part I: The Sundered Path</option><option value="104">#3-21: The Temple of Empyreal Enlightenment - #3-21: The Temple of Empyreal Enlightenment</option><option value="105">#3-22: The Rats of Round Mountain—Part II: Pagoda of the Rat - #3-22: The Rats of Round Mountain—Part II: Pagoda of the Rat</option><option value="106">#3–23: The Goblinblood Dead - #3–23: The Goblinblood Dead</option><option value="107">#3–24: The Golden Serpent - #3–24: The Golden Serpent</option><option value="108">#3–25: Storming the Diamond Gate - #3–25: Storming the Diamond Gate</option><option value="109">#3–26: Portal of the Sacred Rune - #3–26: Portal of the Sacred Rune</option><option value="110">GenCon 2011 Pathfinder RPG Delve - GenCon 2011 Pathfinder RPG Delve PDF</option><option value="111">Grand Convocation 4712 - Grand Convocation 4712</option><option value="112">PAX Prime 2011: PAXport to the Inner Sea Delves - PAX Prime 2011: PAXport to the Inner Sea Delves (Download)</option><option value="113">Special: Blood Under Absalom - Pathfinder Society Special: Blood Under Absalom PDF</option><option value="114">#4–01: Rise of the Goblin Guild - #4–01: Rise of the Goblin Guild</option><option value="115">#4–02: In Wrath’s Shadow - #4–02: In Wrath’s Shadow</option><option value="116">#4–03: The Golemworks Incident - #4–03: The Golemworks Incident</option><option value="117">#4–04: King of the Storval Stairs - #4–04: King of the Storval Stairs</option><option value="118">#4–05: The Sanos Abduction - #4–05: The Sanos Abduction</option><option value="119">#4–06: The Green Market - #4–06: The Green Market</option><option value="120">#4–07: Severing Ties - #4–07: Severing Ties</option><option value="121">#4–08: The Cultist's Kiss - #4–08: The Cultist's Kiss</option><option value="122">#4–09: The Blakros Matrimony - #4–09: The Blakros Matrimony</option><option value="123">#4–10: Feast of Sigils - #4–10: Feast of Sigils</option><option value="124">#4–11: The Disappeared - #4–11: The Disappeared</option><option value="125">#4–12: The Refuge of Time - #4–12: The Refuge of Time</option><option value="126">#4–13: Fortress of the Nail - #4–13: Fortress of the Nail</option><option value="127">#4–14: My Enemy's Enemy - #4–14: My Enemy's Enemy</option><option value="128">#4–15: The Cyphermage Dilemma - #4–15: The Cyphermage Dilemma</option><option value="129">#4–16: The Fabric of Reality - #4–16: The Fabric of Reality</option><option value="130">#4–17: Tower of the Ironwood Watch - #4–17: Tower of the Ironwood Watch</option><option value="131">#4–18: The Veteran's Vault - #4–18: The Veteran's Vault</option><option value="132">#4–19: The Night March of Kalkamedes - #4–19: The Night March of Kalkamedes</option><option value="133">#4–20: Words of the Ancients - #4–20: Words of the Ancients</option><option value="134">#4–21: Way of the Kirin - #4–21: Way of the Kirin</option><option value="135">#4–22: Glories of the Past—Part I: Halls of Dwarven Lore - #4–22: Halls of Dwarven Lore</option><option value="136">#4–23: Rivalry's End - #4–23: Rivalry's End</option><option value="137">#4–24: Glories of the Past—Part II: The Price of Friendship - #4–24: The Price of Friendship</option><option value="138">#4–25: Glories of the Past—Part III: The Secrets Stones Keep - #4–25: The Secrets Stones Keep</option><option value="139">#4–26: The Waking Rune - #4–26: The Waking Rune</option><option value="140">Pathfinder Society: Gen Con Goblin Attack - Pathfinder Society: Gen Con Goblin Attack</option><option value="141">Special: Race for the Runecarved Key - Pathfinder Special: Race for the Runecarved Key</option><option value="142">Special: Race for the Runecarved Key—Round Two - Pathfinder Special: Race for the Runecarved Key</option><option value="143">Special: Ruins of Bonekeep—Level 1: The Silent Grave - Pathfinder Society Special: Ruins of Bonekeep—Level 1: The Silent Grave</option><option value="144">#5–01: The Glass River Rescue - #5–01: The Glass River Rescue</option><option value="145">#5–02: The Wardstone Patrol - #5–02: The Wardstone Patrol</option><option value="146">#5–03: The Hellknight's Feast - #5–03: The Hellknight's Feast</option><option value="147">#5–04: The Stolen Heir - #5–04: The Stolen Heir</option><option value="148">#5–05: The Elven Entanglement - #5–05: The Elven Entanglement</option><option value="149">#5–06: You Have What You Hold - #5–06: You have What You Hold</option><option value="150">#5–07: Port Godless - #5–07: Port Godless</option><option value="151">#5–08: The Confirmation - #5–08: The Confirmation</option><option value="152">#5–09: The Traitor’s Lodge - #5–09: The Traitor’s Lodge</option><option value="153">#5–10: Where Mammoths Dare Not Tread - #5–10: Where Mammoths Dare Not Tread</option><option value="154">#5–11: Library of the Lion - #5–11: Library of the Lion</option><option value="155">#5–12: Destiny of the Sands—Part 1: A Bitter Bargain - #5–12: Destiny of the Sands—Part 1: A Bitter Bargain</option><option value="156">#5–13: Weapon in the Rift - #5–13: Weapon in the Rift</option><option value="157">#5–14: Day of the Demon - #5-14: Day of the Demon</option><option value="158">#5–15: Destiny of the Sands—Part 2: Race to Seeker's Folly - #5–15: Destiny of the Sands—Part 2: Race to Seeker's Folly</option><option value="159">#5–16: Destiny of the Sands—Part 3: Sanctum of the Sages - #5–16: Destiny of the Sands—Part 3: Sanctum of the Sages</option><option value="160">#5–17: Fate of the Fiend - #5–17: Fate of the Fiend</option><option value="161">#5–18: The Stranger Within - #5–18: The Stranger Within</option><option value="162">#5–19: The Horn of Aroden - #5–19: The Horn of Aroden</option><option value="163">#5–20: The Sealed Gate - #5–20: The Sealed Gate</option><option value="164">#5–21: The Merchant's Wake - #5–21: The Merchant's Wake</option><option value="165">#5–22: Scars of the Third Crusade - #5–22: Scars of the Third Crusade</option><option value="166">#5–23: Cairn of Shadows - #5–23: Cairn of Shadows</option><option value="167">#5–24: Assault on the Wound - #5–24: Assault on the Wound</option><option value="168">#5–25: Vengeance at Sundered Crag - #5–25: Vengeance at Sundered Crag</option><option value="169">#5–99: The Paths We Choose - #5–99: The Paths We Choose PDF</option><option value="170">Special: Ruins of Bonekeep—Level 2: Maze to the Mind Slave - Pathfinder Society Special: Ruins of Bonekeep—Level 2: Maze to the Mind Slave</option><option value="171">Special: Ruins of Bonekeep—Level 3: The Wakening Tomb - Pathfinder Society Special: Ruins of Bonekeep—Level 3: The Wakening Tomb PDF</option><option value="172">Special: Siege of the Diamond City - Pathfinder Society Special: Siege of the Diamond City</option><option value="173">#6–00: Legacy of the Stonelords - #6–00: Legacy of the Stonelords PDF</option><option value="174">#6–01: Trial by Machine - #6–01: Trial by Machine PDF</option><option value="175">#6–02: The Silver Mount Collection - #6–02: The Silver Mount Collection PDF</option><option value="176">#6–03: The Technic Siege - #6–03: The Technic Siege PDF</option><option value="177">#6–04: Beacon Below - #6–04: Beacon Below PDF</option><option value="178">#6–05: Slave Ships of Absalom - #6–05: Slave Ships of Absalom PDF</option><option value="179">#6–06: Hall of the Flesh Eaters - #6–06: Hall of the Flesh Eaters PDF</option><option value="180">#6–07: Valley of Veiled Flame - #6–07: Valley of Veiled Flame PDF</option><option value="181">#6–08: The Segang Expedition - #6–08: The Segang Expedition PDF</option><option value="182">#6–09: By Way of Bloodcove - #6–09: By Way of Bloodcove PDF</option><option value="183">#6–10: The Wounded Wisp - #6–10: The Wounded Wisp PDF</option><option value="184">#6–11: The Slave Master's Mirror - #6–11: The Slave Master's Mirror PDF</option><option value="185">#6–12: Scions of the Sky Key, Part 1: On Sharrowsmith's Trail - #6–12: Scions of the Sky Key, Part 1: On Sharrowsmith's Trail PDF</option><option value="186">#6–13: Of Kirin and Kraken - #6–13: Of Kirin and Kraken PDF</option><option value="187">#6–14: Scions of the Sky Key, Part 2: Kaava Quarry - #6–14: Scions of the Sky Key, Part 2: Kaava Quarry PDF</option><option value="188">#6–15: The Overflow Archives - #6–15: The Overflow Archives PDF</option><option value="189">#6–16: Scions of the Sky Key, Part 3: The Golden Guardian - #6–16: Scions of the Sky Key, Part 3: The Golden Guardian PDF</option><option value="190">#6–17: Fires of Karamoss - #6–17: Fires of Karamoss PDF</option><option value="191">#6–18: From Under Ice - #6–18: From Under Ice</option><option value="192">#6–19: Test of Tar Kuata - #6–19: Test of Tar Kuata</option><option value="193">#6–20: Returned to Sky - #6–20: Returned to Sky</option><option value="194">#6–21: Tapestry's Toil - #6–21: Tapestry's Toil</option><option value="195">#6–22: Out of Anarchy - #6–22: Out of Anarchy</option><option value="196">#6–23: The Darkest Abduction - #6–23: The Darkest Abduction</option><option value="197">#6–97: Siege of Serpents - #6–97: Siege of Serpents</option><option value="198">#6–98: Serpents Rise - #6–98: Serpents Rise</option><option value="199">#6–99: True Dragons of Absalom - #6–99: True Dragons of Absalom</option><option value="200">#7–00: The Sky Key Solution - #7–00: The Sky Key Solution</option><option value="201">#7–01: Between the Lines - #7–01: Between the Lines</option><option value="202">#7–02: Six Seconds to Midnight - #7–02: Six Seconds to Midnight</option><option value="203">#7–03: The Bronze House Reprisal - #7–03: The Bronze House Reprisal</option><option value="204">#7–04: The Ironbound Schism - #7–04: The Ironbound Schism</option><option value="205">#7–05: School of Spirits - #7–05: School of Spirits</option><option value="206">#7–06—To Judge a Soul, Part 1: The Lost Legacy - #7–06: To Judge a Soul, Part 1: The Lost Legacy</option><option value="207">#7–07: Trouble in Tamran - #7–07: Trouble in Tamran</option><option value="208">#7–08—To Judge a Soul, Part 2: Karma Reclaimed - #7–08: To Judge a Soul, Part 2: Karma Reclaimed</option><option value="209">#7–09: The Blakros Connection - #7–09: The Blakros Connection</option><option value="210">#7–10: The Consortium Compact - #7–10: The Consortium Connection</option><option value="211">#7–11: Ancients' Anguish - #7–11: Ancients' Anguish</option><option value="212">#7–12: The Twisted Circle - #7–12: The Twisted Circle</option><option value="213">#7–13: Captive in Crystal - #7–13: Captive in Crystal</option><option value="214">#7–14—Faithless and Forgotten, Part 1: Let Bygones Be - #7–14—Faithless and Forgotten, Part 1: Let Bygones Be</option><option value="215">#7–15: The Deepmarket Deception - #7–15: The Deepmarket Deception</option><option value="216">#7–16—Faithless and Forgotten, Part 2: Lost Colony of Taldor - #7–16—Faithless and Forgotten, Part 2: Lost Colony of Taldor</option><option value="217">#7–17: Thralls of the Shattered God - #7–17: Thralls of the Shattered God</option><option value="218">#7–18—Faithless and Forgotten, Part 3: The Infernal Inheritance - #7–18—Faithless and Forgotten, Part 3: The Infernal Inheritance</option><option value="219">#7–19: Labyrinth of Hungry Ghosts - #7–19: Labyrinth of Hungry Ghosts</option><option value="220">#7–20—All for Immortality, Part 1: First Taste of Eternity - #7–20—All for Immortality, Part 1: First Taste of Eternity</option><option value="221">#7–21: The Sun Orchid Scheme - #7–21: The Sun Orchid Scheme</option><option value="222">#7–22: Bid for Alabastrine - #7–22: Bid for Alabastrine</option><option value="223">#7–23: Abducted in Aether - #7–23: Abducted in Aether</option><option value="224">#7–24: Dead Man's Debt - #7–24: Dead Man's Debt</option><option value="225">#7–25: Orders from the Gate - #7–25: Orders from the Gate</option><option value="226">#7–26—All for Immortality, Part 2: All the Gods Beyond - #7–26—All for Immortality, Part 2: All the Gods Beyond</option><option value="227">#7–27: Beyond Azlant Ridge - #7–27: Beyond Azlant Ridge</option><option value="228">#7–28: Ageless Ambitions - #7–28: Ageless Ambitions</option><option value="229">#7–29—All for Immortality, Part 3: Serpents Fall - #7–29—All for Immortality, Part 3: Serpents Fall</option><option value="230">#7–98: Serpents' Ire - #7–98: Serpents' Ire</option><option value="231">#7–99: Through Maelstrom Rift - #7–99: Through Maelstrom Rift</option><option value="232">#8-00: The Cosmic Captive - Pathfinder Society Special #8-00: The Cosmic Captive</option><option value="233">#8-01: Portent's Peril - #8-01: Portent's Peril</option><option value="234">#8-02: Ward Asunder - #8-02: Ward Asunder</option><option value="235">#8-03: Captives of Toil - #8-03: Captives of Toil</option><option value="236">#8-04: Wardens of Sulfur Gulch - #8-04: Wardens of Sulfur Gulch</option><option value="237">#8-05: Ungrounded but Unbroken - #8-05: Ungrounded but Unbroken</option><option value="238">#8-06: Reaping What We Sow - #8-06: Reaping What We Sow</option><option value="239">#8-07: From the Tome of Righteous Repose - #8-07: From the Tome of Righteous Repose</option><option value="240">#8-08—Tyranny of Winds, Part 1: The Sandstorm Prophecy - #8-08—Tyranny of Winds, Part 1: The Sandstorm Prophecy</option><option value="241">#8-09—Forged in Flame, Part 1: The Cindersworn Pact - #8-09—Forged in Flame, Part 1: The Cindersworn Pact</option><option value="242">#8-10—Tyranny of Winds, Part 2: Secrets of the Endless Sky - #8-10—Tyranny of Winds, Part 2: Secrets of the Endless Sky</option><option value="243">#8-11—Forged in Flame, Part 2: Cleansed With Fire - #8-11—Forged in Flame, Part 2: Cleansed With Fire</option><option value="244">#8-12—Tyranny of Winds, Part 3: Caught in the Eclipse - #8-12—Tyranny of Winds, Part 3: Caught in the Eclipse</option><option value="245">#8-13: What Sleeps in Stone - #8-13: What Sleeps in Stone</option><option value="246">#8-14: To Seal the Shadow - #8-14: To Seal the Shadow</option><option value="247">#8-15: Hrethnar's Throne - #8-15: Hrethnar's Throne</option><option value="248">#8-16: House of Harmonious Wisdom - #8-16: House of Harmonious Wisdom</option><option value="249">#8-17: Refugees of the Weary Sky - #8-17: Refugees of the Weary Sky</option><option value="250">#8-18—Champion's Chalice, Part 1: Blazing Dangerous Trails - #8-18—Champion's Chalice, Part 1: Blazing Dangerous Trails</option><option value="251">#8-19: Treacherous Waves - #8-19: Treacherous Waves</option><option value="252">#8-20: Torrent's Last Will - #8-20: Torrent's Last Will</option><option value="253">#8-21—Champion's Chalice, Part 2: Agents of the Eye - #8-21—Champion's Chalice, Part 2: Agents of the Eye</option><option value="254">#8-22: Wrath of the Fleshwarped Queen - #8-22: Wrath of the Fleshwarped Queen</option><option value="255">#8-23: Graves of Crystalmaw Pass - #8-23: Graves of Crystalmaw Pass</option><option value="256">#8-24: Raid on the Cloudborne Keep - #8-24: Raid on the Cloudborne Keep</option><option value="257">#8-25: Unleashing the Untouchable - #8-25: Unleashing the Untouchable</option><option value="258">#8-99A: The Solstice Scar, Version A - Pathfinder Society Special #8-99A: The Solstice Scar, Version A</option><option value="259">#8-99B: The Solstice Scar, Version B - Pathfinder Society Special #8-99B: The Solstice Scar, Version B</option><option value="260">#8-99C: The Solstice Scar, Version C - #8-99C: The Solstice Scar, Version C</option><option value="261">#8–99: The Solstice Scar, Version D - #8-99D: The Solstice Scar, Version D</option><option value="262">#9-00: Assault on Absalom - #9-00: Assault on Absalom</option><option value="263">#9-01: The Cost of Enlightenment - #9-01: The Cost of Enlightenment</option><option value="264">#9-02: A Case of Missing Persons - #9-02: A Case of Missing Persons</option><option value="265">#9-03: On the Border of War - #9-03: On the Border of War</option><option value="266">#9-04: The Unseen Inclusion - #9-04: The Unseen Inclusion</option><option value="267">#9-05: Call of the Copper Gate - #9-05: Call of the Copper Gate</option><option value="268">#9-06: The Shores of Heaven - #9-06: The Shores of Heaven</option><option value="269">#9-07: Salvation of the Sages - #9-07: Salvation of the Sages</option><option value="270">#9-08: Birthright Betrayed - #9-08: Birthright Betrayed</option><option value="271">#9-09: Beyond the Halflight Path - #9-09: Beyond the Halflight Path</option><option value="272">#9-10: Signs in Senghor - #9-10: Signs in Senghor</option><option value="273">#9-11: The Jarlsblood Witch Saga</option><option value="274">#9-12: Shrine of the Sacred Tempest - #9-12: Shrine of the Sacred Tempest</option><option value="275">#9-13: The Lion's Justice</option><option value="276">#9-14: Down the Verdant Path - #9–14: Down the Verdant Path</option><option value="277">#9-15: The Bloodcove Blockade - #9–15: The Bloodcove Blockade</option><option value="278">#9-16: Fallen Family, Broken Name - #9–16: Fallen Family, Broken Name</option><option value="279">#9-17: Oath of the Overwatched - #9–17: Oath of the Overwatched</option><option value="280">#9-18: Scourge of the Farheavens - #9–18: Scourge of the Farheavens</option><option value="281">#9-19: Clash in Kaimuko Wood - #9–19: Clash in Kaimuko Wood</option><option value="282">#9-20: Fury of the Final Blade - #9–20: Fury of the Final Blade</option><option value="283">#9-21: In the Grandmaster’s Name - #9–21: In the Grandmaster's Name</option><option value="284">#9-22: Grotto of the Deluged God - #9-22: Grotto of the Deluged God</option><option value="285">#9-23: The Ghol-Gan Heresy - #9-23: The Ghol-Gan Heresy</option><option value="286">#9-24: Beneath Unbroken Waves - #9-24: Beneath Unbroken Waves</option><option value="287">#9-25: Betrayal in the Bones - #9-25: Betrayal in the Bones</option><option value="288">#10-00: The Hao Jin Cataclysm - PFS(1ed)  #10-00: The Hao Jin Cataclysm</option><option value="289">#10-01: Oathbreakers Die - PFS(1ed)  #10-01: Oathbreakers Die</option><option value="290">#10-02: Bones of Biting Ants - PFS(1ed)  #10-02: Bones of Biting Ants</option><option value="291">#10-03: Death On The Ice - PFS(1ed)  #10-03: Death On The Ice</option><option value="292">#10-04: Reaver's Roar - PFS(1ed)  #10-04: Reaver's Roar</option><option value="293">#10-05: Mysteries Under Moonlight, Part 1: Testament of Souls - PFS(1ed)  #10-05: Mysteries Under Moonlight, Part 1: Testament of Souls</option><option value="294">#10-06: Treason's Chains - PFS(1ed)  #10-06: Treason's Chains</option><option value="295">#10-07: Mysteries Under Moonlight, Part 2: The Howling Dance - PFS(1ed)  #10-07: Mysteries Under Moonlight, Part 2: The Howling Dance</option><option value="296">#10-08: What Prestige is Worth - PFS(1ed)  #10-08: What Prestige is Worth</option><option value="297">#10-09: The Rasping Rebirth - PFS(1ed)  #10-09: The Rasping Rebirth</option><option value="298">#10-10: The Shattered Shield - PFS(1ed)  #10-10: The Shattered Shield</option><option value="299">#10-11: The Hao Jin Hierophant - PPFS(1ed)  #10-11: The Hao Jin Hierophant</option><option value="300">#10-12: Breath of the Dragonskull - PFS(1ed) #10-12: Breath of the Dragonskull</option><option value="301">#10-13: Fragments of Antiquity - PFS(1ed)  #10-13: Fragments of Antiquity</option><option value="302">#10-14: Debt to the Quah - PFS(1ed)  #10-14: Debt to the Quah</option><option value="303">#10-15: Tapestry's Trial - PFS(1ed)  #10-15: Tapestry's Trial</option><option value="304">#10-16: What the Helms Hide - PFS(1ed)  #10-16: What the Helms Hide</option><option value="305">#10-17: On Sevenfingers's Sails - PFS(1ed)  #10-17: On Sevenfingers's Sails</option><option value="306">#10-18: The Daughters' Due - PFS(1ed) #10-18: The Daughters' Due</option><option value="307">#10-19: Corpses in Kalsgard - PFS(1ed)  #10-19: Corpses in Kalsgard</option><option value="308">#10-20: Countdown to Round Mountain - PFS(1ed) #10-20: Countdown to Round Mountain</option><option value="309">#10-22—Passing the Torch, Part 1: Who Wears the Mask - PFS(1ed) #10-22—Passing the Torch, Part 1: Who Wears the Mask</option><option value="310">#10-23—Passing the Torch, Part 2: Who Speaks for the Ten - PFS(1ed) #10-23—Passing the Torch, Part 2: Who Speaks for the Ten</option><option value="311">#10-98: Siege of Gallowspire - PFS(1ed)  #10-98: Siege of Gallowspire</option><option value="312">PFS(1ed)  #10-21: Slaver's End</option><option value="313">Quest: Fane of Fangs</option><option value="314">Quest: Honor's Echo - Pathfinder Society Quest: Honor's Echo</option><option value="315">Quest: Phantom Phenomena - Pathfinder Society Quest: Phantom Phenomena</option><option value="316">Quest: The Silverhex Chronicles - Pathfinder Society Quest: The Silverhex Chronicles</option><option value="317">Academy: Advanced - Pathfinder Society Academy: Advanced</option><option value="318">Beginner Box Bash Demos Part 1 - Pathfinder Roleplaying Game: Beginner Box Bash Demos Part 1</option><option value="319">Beginner Box Bash Demos Part 2 - Pathfinder Roleplaying Game: Beginner Box Bash Demos Part 2</option><option value="320">Intro 1: First Steps—Part I: In Service to Lore - Intro 1: First Steps—Part I: In Service to Lore</option><option value="321">Intro 2: First Steps—Part II: To Delve the Dungeon Deep PDF (Retired) - Intro 2: First Steps—Part II: To Delve the Dungeon Deep</option><option value="322">Intro 3: First Steps—Part III: A Vision of Betrayal PDF (Retired) - Intro 3: First Steps—Part III: A Vision of Betrayal</option><option value="323">Pathfinder Society: GM 101 - Pathfinder Society: GM 101</option><option value="324">Pathfinder Society: GM 201 - Pathfinder Society: GM 201</option><option value="325">AP #25: The Bastards of Erebus</option><option value="326">AP #26: The Sixfold Trial</option><option value="327">AP #27: What Lies in Dust</option><option value="328">AP #28: The Infernal Syndrome</option><option value="329">AP #29: Mother of Flies</option><option value="330">AP #30: The Twice-Damned Prince</option><option value="331">AP #31: Stolen Land</option><option value="332">AP #32: Rivers Run Red</option><option value="333">AP #33: The Varnhold Vanishing</option><option value="334">AP #34: Blood for Blood</option><option value="335">AP #35: War of the River Kings</option><option value="336">AP #36: Sound of a Thousand Screams</option><option value="337">AP #37: Souls for Smuggler's Shiv</option><option value="338">AP #38: Racing to Ruin</option><option value="339">AP #39: City of Seven Spears</option><option value="340">AP #40: Vaults of Madness</option><option value="341">AP #41: The Thousand Fangs Below</option><option value="342">AP #42: Sanctum of the Serpent God</option><option value="343">AP #43: The Haunting of Harrowstone</option><option value="344">AP #44: Trial of the Beast</option><option value="345">AP #45: Broken Moon</option><option value="346">AP #46: Wake of the Watcher</option><option value="347">AP #47: Ashes at Dawn</option><option value="348">AP #48: Shadows of Gallowspire</option><option value="349">AP #49: The Brinewall Legacy</option><option value="350">AP #50: Night of Frozen Shadows</option><option value="351">AP #51: The Hungry Storm</option><option value="352">AP #52: Forest of Spirits</option><option value="353">AP #53: Tide of Honor</option><option value="354">AP #54: The Empty Throne</option><option value="355">AP #55: The Wormwood Mutiny</option><option value="356">AP #56: Raiders of the Fever Sea</option><option value="357">AP #57: Tempest Rising</option><option value="358">AP #58: Island of Empty Eyes</option><option value="359">AP #59: The Price of Infamy</option><option value="360">AP #60: From Hell’s Heart</option><option value="361">AP #61: Shards of Sin</option><option value="362">AP #62: Curse of the Lady's Light</option><option value="363">AP #63: The Asylum Stone</option><option value="364">AP #64: Beyond the Doomsday Door</option><option value="365">AP #65: Into the Nightmare Rift</option><option value="366">AP #66: The Dead Heart of Xin</option><option value="367">AP #67: The Snows of Summer</option><option value="368">AP #68: The Shackled Hut</option><option value="369">AP #69: Maiden, Mother, Crone</option><option value="370">AP #70: The Frozen Stars</option><option value="371">AP #71: Rasputin Must Die!</option><option value="372">AP #72: The Witch Queen’s Revenge</option><option value="373">AP #73: The Worldwound Incursion</option><option value="374">AP #74: Sword of Valor</option><option value="375">AP #75: Demon's Heresy</option><option value="376">AP #76: The Midnight Isles</option><option value="377">AP #77: Herald of the Ivory Labyrinth</option><option value="378">AP #78: City of Locusts</option><option value="379">AP #79: The Half-Dead City</option><option value="380">AP #80: Empty Graves</option><option value="381">AP #81: Shifting Sands</option><option value="382">AP #82: Secrets of the Sphinx</option><option value="383">AP #83: The Slave Trenches of Hakotep</option><option value="384">AP #84: Pyramid of the Sky Pharaoh</option><option value="385">AP #85: Fires of Creation</option><option value="386">AP #86: Lords of Rust</option><option value="387">AP #87: The Choking Tower</option><option value="388">AP #88: Valley of the Brain Collectors</option><option value="389">AP #89: Palace of Fallen Stars</option><option value="390">AP #90: The Divinity Drive</option><option value="391">AP #91: Battle of Bloodmarch Hill</option><option value="392">AP #92: The Hill Giant's Pledge</option><option value="393">AP #93: Forge of the Giant God</option><option value="394">AP #94: Ice Tomb of the Giant Queen</option><option value="395">AP #95: Anvil of Fire</option><option value="396">AP #96: Shadow of the Storm Tyrant</option><option value="397">AP #97: In Hell's Bright Shadow</option><option value="398">AP #98: Turn of the Torrent</option><option value="399">AP #99: Dance of the Damned</option><option value="400">AP #100: A Song of Silver</option><option value="401">AP #101: The Kintargo Contract</option><option value="402">AP #102: Breaking the Bones of Hell</option><option value="403">AP #109: In Search of Sanity</option><option value="404">AP #110: The Thrushmoor Terror</option><option value="405">AP #111: Dreams of the Yellow King</option><option value="406">AP #112: The Whisper Out of Time</option><option value="407">AP #113: What Grows Within</option><option value="408">AP #114: Black Stars Beckon</option><option value="409">AP #115: Trail of the Hunted</option><option value="410">AP #116: Fangs of War</option><option value="411">AP #117: Assault on Longshadow</option><option value="412">AP #118: Siege of Stone</option><option value="413">AP #119: Prisoners of the Blight</option><option value="414">AP #120: Vault of the Onyx Citadel</option><option value="415">AP #121: The Lost Outpost</option><option value="416">AP #122: Into the Shattered Continent</option><option value="417">AP #123: The Flooded Cathedral</option><option value="418">AP #124: City in the Deep</option><option value="419">AP #125: Tower of the Drowned Dead</option><option value="420">AP #126: Beyond the Veiled Past</option><option value="421">AP #127: Crownfall</option><option value="422">AP #128: Songbird, Scion, Saboteur</option><option value="423">AP #129: The Twilight Child</option><option value="424">AP #130: City in the Lion's Eye</option><option value="425">AP #131: The Reaper's Right Hand</option><option value="426">AP #132: The Six-Legend Soul</option><option value="427">AP #133: Secrets of Roderic's Cove</option><option value="428">AP #134: It Came from Hollow Mountain</option><option value="429">AP #135: Runeplague</option><option value="430">AP #136: Temple of the Peacock Spirit</option><option value="431">AP #137: The City Outside of Time</option><option value="432">AP #138: Rise of New Thassilon</option><option value="433">AP #139: The Dead Roads</option><option value="434">AP #140: Eulogy for Roslar's Coffer</option><option value="435">AP #141: Last Watch</option><option value="436">AP #142: Gardens of Gallowspire</option><option value="437">AP #143: Borne by the Sun's Grace</option><option value="438">AP #144: Midwives to Death</option><option value="439">Curse of the Crimson Throne - Pathfinder AP: #7: Edge of Anarchy (Curse of the Crimson Throne 1 of 6)</option><option value="440">Curse of the Crimson Throne - Pathfinder AP: #8: Seven Days to the Grave (Curse of the Crimson Throne 2 of 6)</option><option value="441">Curse of the Crimson Throne - Pathfinder AP: #9: Escape from Old Korvosa (Curse of the Crimson Throne 3 of 6)</option><option value="442">Curse of the Crimson Throne - Pathfinder AP: #10: A History of Ashes (Curse of the Crimson Throne 4 of 6)</option><option value="443">Curse of the Crimson Throne - Pathfinder AP: #11 Skeletons of Scarwall (Curse of the Crimson Throne 5 of 6)</option><option value="444">Curse of the Crimson Throne - Pathfinder AP: #12: Crown of Fangs (Curse of the Crimson Throne 6 of 6)</option><option value="445">Rise of the Runelords Anniversary Edition - Pathfinder AP: #1: Burnt Offerings (Rise of the Runelords 1 of 6)</option><option value="446">Rise of the Runelords Anniversary Edition - Pathfinder AP: #2: Skinsaw Murders (Rise of the Runelords 2 of 6)</option><option value="447">Rise of the Runelords Anniversary Edition - Pathfinder AP: #3: Hook Mountain Massacre (Rise of the Runelords 3 of 6)</option><option value="448">Rise of the Runelords Anniversary Edition - Pathfinder AP: #4: Fortress of the Stone Giants (Rise of the Runelords 4 of 6)</option><option value="449">Rise of the Runelords Anniversary Edition - Pathfinder AP: #5: Sins of the Saviors (Rise of the Runelords 5 of 6)</option><option value="450">Rise of the Runelords Anniversary Edition - Pathfinder AP: #6: Spires of Xin-Shalast (Rise of the Runelords 6 of 6)</option><option value="451">Academy of Secrets - Module: Academy of Secrets</option><option value="452">Broken Chains - Module: Broken Chains</option><option value="453">Carrion Hill - Module: Carrion Hill</option><option value="454">City of Golden Death - Module: City of Golden Death</option><option value="455">Cradle of Night, Part 1:</option><option value="456">Cradle of Night, Part 2:</option><option value="457">Cradle of Night, Part 3:</option><option value="458">Crypt of the Everflame - Module: Crypt of the Everflame</option><option value="459">Cult of the Ebon Destroyers - Module: Cult of the Ebon Destroyers</option><option value="460">Curse of the Riven Sky - Module: Curse of the Riven Sky</option><option value="461">Daughters of Fury - Module: Daughters of Fury, Part 1: Hell's Quarry</option><option value="462">Daughters of Fury - Module: Daughters of Fury, Part 2: The Border Standings</option><option value="463">Daughters of Fury - Module: Daughters of Fury, Part 3: Sacrifice</option><option value="464">Dawn of the Scarlet Sun - Module: Dawn of the Scarlet Sun</option><option value="465">Death in Hallein Town</option><option value="466">Doom Comes to Dustpawn - Module: Doom Comes to Dustpawn</option><option value="467">Down the Blighted Path - Module: Down the Blighted Path, Part 1: Firebrand's Dedoubt</option><option value="468">Down the Blighted Path - Module: Down the Blighted Path, Part 2: Winding into Darkness</option><option value="469">Down the Blighted Path - Module: Down the Blighted Path, Part 3: The Tower Spite Built</option><option value="470">The Dragon's Demand - Module: The Dragon's Demand, Part 1: The Blood Vow Lair</option><option value="471">The Dragon's Demand - Module: The Dragon's Demand, Part 2: Hunclay's Cave, Auction, and Crypt of Tula</option><option value="472">The Dragon's Demand - Module: The Dragon's Demand, Part 3: Monastery of Saint Kyerixus</option><option value="473">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 1: The Tower Ruins</option><option value="474">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 2: The Cellars</option><option value="475">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 3: Splinterden</option><option value="476">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 4: Godhome</option><option value="477">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 5: The Drowned Level</option><option value="478">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 6: The Clockwork Maze</option><option value="479">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 7: Shrine of the Awakener</option><option value="480">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 8: The Circle of Vissk-Thar</option><option value="481">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 9: The Spire Axis</option><option value="482">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 10: The Magma Vault</option><option value="483">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 11: The Tomb of Yarrix</option><option value="484">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 12: The Automaton Forge</option><option value="485">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 13: The Pleasure Gardens</option><option value="486">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 14: The Throne of Azlant</option><option value="487">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 15: Order and Chaos</option><option value="488">The Emerald Spire Superdungeon - Module: The Emerald Spire Superdungeon, Level 16: The Emerald Root</option><option value="489">Fangwood Keep - Module: Fangwood Keep</option><option value="490">Feast of Dust - Module: Feast of Dust, Part 1: In the Jackal's Shadow</option><option value="491">Feast of Dust - Module: Feast of Dust, Part 2: Oblivion and Sand</option><option value="492">Feast of Dust - Module: Feast of Dust, Part 3: Flesh for the Famine Prince</option><option value="493">Feast of Ravenmoor - Module: The Feast of Ravenmoor</option><option value="494">From Shore to Sea - Module: From Shore to Sea</option><option value="495">Gallows of Madness - Module: Gallows of Madness, Part 1: A Foul Breed</option><option value="496">Gallows of Madness - Module: Gallows of Madness, Part 2: What Lurks in the Woods</option><option value="497">Gallows of Madness - Module: Gallows of Madness, Part 3: The Festering Bolt</option><option value="498">The Gauntlet - Module: The Gauntlet</option><option value="499">The Godsmouth Heresy - Module: The Godsmouth Heresy</option><option value="500">The Harrowing - Module: The Harrowing</option><option value="501">Heroes for Highdelve - Module: Heroes for Highdelve</option><option value="502">The House on Hook Street - Module: The House on Hook Street, Part 1: Spiders and Flies &amp; Darkness Falls</option><option value="503">The House on Hook Street - Module: The House on Hook Street, Part 2: Return to the House on Hook Street</option><option value="504">Ire of the Storm - Module: Ire of the Storm, Part 1: The Deluge</option><option value="505">Ire of the Storm - Module: Ire of the Storm, Part 2: Beyond the Colony</option><option value="506">Ire of the Storm - Module: Ire of the Storm, Part 3: The Sky Tempest Temple</option><option value="507">Masks of the Living God - Module: Masks of the Living God</option><option value="508">Master of the Fallen Fortress - Module: Master of the Fallen Fortress</option><option value="509">The Midnight Mirror - Module: The Midnight Mirror</option><option value="510">The Moonscar - Module: The Moonscar</option><option value="511">Murder's Mark - Module: Murder's Mark</option><option value="512">No Response from Deepmar - Module: No Response from Deepmar</option><option value="513">Pathfinder Online: Thornkeep - Pathfinder Online: Thornkeep, The Accursed Halls</option><option value="514">Pathfinder Online: Thornkeep - Pathfinder Online: Thornkeep, The Dark Menagerie</option><option value="515">Pathfinder Online: Thornkeep - Pathfinder Online: Thornkeep, The Enigma Vault</option><option value="516">Pathfinder Online: Thornkeep - Pathfinder Online: Thornkeep, The Forgotten Laboratory</option><option value="517">Pathfinder Online: Thornkeep - Pathfinder Online: Thronkeep, Sanctum of a Lost Age</option><option value="518">Plunder &amp; Peril - Module: Plunder &amp; Peril, Part 1: Rum Punch</option><option value="519">Plunder &amp; Peril - Module: Plunder &amp; Peril, Part 2: Dangerous Waters</option><option value="520">Plunder &amp; Peril - Module: Plunder &amp; Peril, Part 3: Black Coral Cove</option><option value="521">Realm of the Fellnight Queen - Module: Realm of the Fellnight Queen</option><option value="522">Risen from the Sands - Module: Risen from the Sands</option><option value="523">The Ruby Phoenix Tournament - Module: The Ruby Phoenix Tournament</option><option value="524">Seers of the Drowned City - Module: Seers of the Drowned City, Part 1: High Tide in Hyrantam</option><option value="525">Seers of the Drowned City - Module: Seers of the Drowned City, Part 2: Eyes in the Storm</option><option value="526">Seers of the Drowned City - Module: Seers of the Drowned City, Part 3: Hunting the Storm</option><option value="527">Tears at Bitter Manor - Module: Tears at Bitter Manor, Part 1: The Golden Watch, North by Northeast, Hope's Hollow</option><option value="528">Tears at Bitter Manor - Module: Tears at Bitter Manor, Part 2: The House without Hope</option><option value="529">Tomb of the Iron Medusa - Module: Tomb of the Iron Medusa</option><option value="530">Wardens of the Reborn Forge - Module: Wardens of the Reborn Forge, Part 1: First Level of the Karggat Mine</option><option value="531">Wardens of the Reborn Forge - Module: Wardens of the Reborn Forge, Part 2: Second Level of the Karggat Mine</option><option value="532">Wardens of the Reborn Forge - Module: Wardens of the Reborn Forge, Part 3: The Megator Facient Factory</option><option value="533">Wardens of the Reborn Forge - Wardens of the Reborn Forge, Part 4</option><option value="534">We B4 Goblins! - Module: We B4 Goblins!</option><option value="535">We Be 5uper Goblins!</option><option value="536">We Be Goblins Free! - Module: We Be Goblins Free!</option><option value="537">We Be Goblins Too! - Module: We Be Goblins Too!</option><option value="538">We Be Goblins! - Module: We Be Goblins!</option><option value="539">The Witchwar Legacy - Module: The Witchwar Legacy</option><option value="540">Dawn of the Scarlet Sun - Module: Dawn of the Scarlet Sun</option><option value="541">Master of the Fallen Fortress - Module: Master of the Fallen Fortress</option><option value="542">Risen from the Sands - Module: Risen from the Sands</option><option value="543">We B4 Goblins! - Module: We B4 Goblins!</option><option value="544">We Be 5uper Goblins!</option><option value="545">We Be Goblins Free! - Module: We Be Goblins Free!</option><option value="546">We Be Goblins Too! - Module: We Be Goblins Too!</option><option value="547">We Be Goblins! - Module: We Be Goblins!</option><option value="548">We Be Heroes? - Module: We Be Heroes?</option></select>
+            
+          </p>
+          <p id="ReportableSectionTypeP" style="visibility: hidden;">1</p>
+          
+          
+          <p>
+            
+             Scenario missions accomplished: 
+              <div style="display:inline-block;margin: 5px 25px;">A <input type="checkbox" name="17.2.1.3.1.1.1.27.1" value="17.2.1.3.1.1.1.27.1" /></div>
+              <div style="display:inline-block;margin: 5px 25px;">B <input type="checkbox" name="17.2.1.3.1.1.1.27.3" value="17.2.1.3.1.1.1.27.3" /></div>
+              <div style="display:inline-block;margin: 5px 25px;">C <input type="checkbox" name="17.2.1.3.1.1.1.27.5" value="17.2.1.3.1.1.1.27.5" /></div>
+              <div style="display:inline-block;margin: 5px 25px;">D <input type="checkbox" name="17.2.1.3.1.1.1.27.7" value="17.2.1.3.1.1.1.27.7" /></div>
+            
+            
+          </p>
+          <p>
+            
+          </p>
+          <p>
+            
+          </p>
+        </div>
+        
+          <div style="margin-top:10px;">
+            <div style="display: inline-block;">
+              <span class="form-prompt">GM #</span>
+              <input size="6" onChange="getGameMasterInfo();getGameMasterCharacterInfo();" id="gameMasterNumber" title="GM's Organized Play number" type="text" name="17.2.1.3.1.1.1.35.1" />-<input size="2" onChange="getGameMasterCharacterInfo();" id="gameMasterCharacterNumber" title="GM's Character number for GM Credit" type="text" name="17.2.1.3.1.1.1.35.3" />
+              
+                
+                  <span align="right"><input type="submit" value="Dispute" name="17.2.1.3.1.1.1.35.5.1.1" /></span>
+                
+              
+              
+            </div>
+            <div style="display: inline-block;">
+              <span class="form-prompt">GM Name</span>
+              <input id="gameMasterName" title="GM's name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.35.9" />
+            </div>
+            
+              <div style="display: inline-block;">
+                <span class="form-prompt">GM Faction</span>
+                <select id="gmFactionSelect" name="17.2.1.3.1.1.1.35.11.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select>
+              </div>
+            
+            <div class="tiny"></div><br/>
+            
+            <div style="display: inline-block;">
+              <span class="form-prompt">GM
+                 
+                 prestige
+                : <input size="2" title="GM Character Fame or Prestige" type="text" name="17.2.1.3.1.1.1.35.15.5" />
+                </span>
+              </div>
+            
+          </div>
+        
+        <hr style="margin:20px 0 10px;padding:0" />
+        <table style="text-align:center; width: 100%;">
+          <tr>
+            <th>Character #</th>
+            
+              <th>Character Name</th>
+              <th>Character Type</th>
+              
+                <th>Faction</th>
+                
+                
+                <th>Prestige</th>
+                
+                
+            
+            <th>Character<br />Died</th>
+            
+            <th />
+            <th />          
+            <td><input type="submit" value="Add Extra Character" name="17.2.1.3.1.1.1.41" /></td>
+          </tr>
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('0',' false');var0characterName.setOptions({ params: { characterID:document.getElementById('0characterNumber').value, playerID:document.getElementById('0playerNumber').value, playerNum:'0', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="0playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.0.1.1" />-<input size="4" onChange="getCharacterInfo('0');var0characterName.setOptions({ params: { characterID:document.getElementById('0characterNumber').value, playerID:document.getElementById('0playerNumber').value, playerNum:'0', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="0characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.0.1.3" />
+                </td>
+                
+                  <td><input id="0characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.0.1.5.1" /></td>
+                  <td>
+                    <div id="0characterType"></div>
+                  </td>
+                  
+                    <td><select id="0FactionSelect" name="17.2.1.3.1.1.1.43.0.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="0prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.0.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='0prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.0.1.7" value="17.2.1.3.1.1.1.43.0.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.0.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.0.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('1',' false');var1characterName.setOptions({ params: { characterID:document.getElementById('1characterNumber').value, playerID:document.getElementById('1playerNumber').value, playerNum:'1', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="1playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.1.1.1" />-<input size="4" onChange="getCharacterInfo('1');var1characterName.setOptions({ params: { characterID:document.getElementById('1characterNumber').value, playerID:document.getElementById('1playerNumber').value, playerNum:'1', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="1characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.1.1.3" />
+                </td>
+                
+                  <td><input id="1characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.1.1.5.1" /></td>
+                  <td>
+                    <div id="1characterType"></div>
+                  </td>
+                  
+                    <td><select id="1FactionSelect" name="17.2.1.3.1.1.1.43.1.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="1prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.1.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='1prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.1.1.7" value="17.2.1.3.1.1.1.43.1.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.1.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.1.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('2',' false');var2characterName.setOptions({ params: { characterID:document.getElementById('2characterNumber').value, playerID:document.getElementById('2playerNumber').value, playerNum:'2', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="2playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.2.1.1" />-<input size="4" onChange="getCharacterInfo('2');var2characterName.setOptions({ params: { characterID:document.getElementById('2characterNumber').value, playerID:document.getElementById('2playerNumber').value, playerNum:'2', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="2characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.2.1.3" />
+                </td>
+                
+                  <td><input id="2characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.2.1.5.1" /></td>
+                  <td>
+                    <div id="2characterType"></div>
+                  </td>
+                  
+                    <td><select id="2FactionSelect" name="17.2.1.3.1.1.1.43.2.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="2prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.2.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='2prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.2.1.7" value="17.2.1.3.1.1.1.43.2.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.2.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.2.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('3',' false');var3characterName.setOptions({ params: { characterID:document.getElementById('3characterNumber').value, playerID:document.getElementById('3playerNumber').value, playerNum:'3', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="3playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.3.1.1" />-<input size="4" onChange="getCharacterInfo('3');var3characterName.setOptions({ params: { characterID:document.getElementById('3characterNumber').value, playerID:document.getElementById('3playerNumber').value, playerNum:'3', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="3characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.3.1.3" />
+                </td>
+                
+                  <td><input id="3characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.3.1.5.1" /></td>
+                  <td>
+                    <div id="3characterType"></div>
+                  </td>
+                  
+                    <td><select id="3FactionSelect" name="17.2.1.3.1.1.1.43.3.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="3prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.3.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='3prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.3.1.7" value="17.2.1.3.1.1.1.43.3.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.3.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.3.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('4',' false');var4characterName.setOptions({ params: { characterID:document.getElementById('4characterNumber').value, playerID:document.getElementById('4playerNumber').value, playerNum:'4', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="4playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.4.1.1" />-<input size="4" onChange="getCharacterInfo('4');var4characterName.setOptions({ params: { characterID:document.getElementById('4characterNumber').value, playerID:document.getElementById('4playerNumber').value, playerNum:'4', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="4characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.4.1.3" />
+                </td>
+                
+                  <td><input id="4characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.4.1.5.1" /></td>
+                  <td>
+                    <div id="4characterType"></div>
+                  </td>
+                  
+                    <td><select id="4FactionSelect" name="17.2.1.3.1.1.1.43.4.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="4prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.4.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='4prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.4.1.7" value="17.2.1.3.1.1.1.43.4.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.4.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.4.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+            
+              <tr>
+                <td colspan="7"><hr style="margin:0;" /></td>
+              </tr>
+              <tr class="SeatRow">
+                <td>
+                  <input size="6" onChange="getCharacterInfo('5',' false');var5characterName.setOptions({ params: { characterID:document.getElementById('5characterNumber').value, playerID:document.getElementById('5playerNumber').value, playerNum:'5', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="5playerNumber" title="Player's Organized Play number" type="text" name="17.2.1.3.1.1.1.43.5.1.1" />-<input size="4" onChange="getCharacterInfo('5');var5characterName.setOptions({ params: { characterID:document.getElementById('5characterNumber').value, playerID:document.getElementById('5playerNumber').value, playerNum:'5', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'}});" id="5characterNumber" title="Character's number" type="text" name="17.2.1.3.1.1.1.43.5.1.3" />
+                </td>
+                
+                  <td><input id="5characterName" title="Character name as recorded on the session sheet" type="text" name="17.2.1.3.1.1.1.43.5.1.5.1" /></td>
+                  <td>
+                    <div id="5characterType"></div>
+                  </td>
+                  
+                    <td><select id="5FactionSelect" name="17.2.1.3.1.1.1.43.5.1.5.5.1"><option value="WONoSelectionString">Select a Faction...</option><option value="0">TC - The Concordance</option><option value="1">DA - Dark Archive</option><option value="2">EX - The Exchange</option><option value="3">GL - Grand Lodge</option><option value="4">LE - Liberty's Edge</option><option value="5">SS - Scarab Sages</option><option value="6">SiC - Silver Crusade</option><option value="7">SOV - Sovereign Court</option></select></td>
+                    
+                    	<td><input size="3" id="5prestigePoints" title="Number of prestige points earned this session" type="text" name="17.2.1.3.1.1.1.43.5.1.5.5.3.1" /></td>
+                    
+                    
+                
+                <td><input onChange="var id='5prestigePoints';var f=document.getElementById(id);if(this.checked){f.value=null;f.disabled=true;}else{f.disabled=false;}" title="Check this box if the character died during this session" type="checkbox" name="17.2.1.3.1.1.1.43.5.1.7" value="17.2.1.3.1.1.1.43.5.1.7" /></td>
+                
+                
+                <td>
+            
+          </td>
+                <td rowspan="2">
+                  <div align="right" style="display:inline">
+                    <input type="submit" value="Delete" name="17.2.1.3.1.1.1.43.5.1.15" />
+                    
+                      <input type="submit" value="Dispute" name="17.2.1.3.1.1.1.43.5.1.17.1.0" />
+                    
+                    
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="tiny"> Prestige does not count. Missing character number. <br /><br /> </td>
+              </tr>
+            
+          
+        </table>
+        <table border="0" width="100%" style="margin-top: 50px;">
+          <tr>
+            <td align="center">
+              <div id="ConversionWarning" style="visibility: hidden;color:red">Warning: This will convert your character from Pathfinder Core to Pathfinder RPG!</div>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">
+              <input type="submit" value="Save This Session" name="17.2.1.3.1.1.1.45" />
+              <input type="submit" value="Save and Go To New Session" name="17.2.1.3.1.1.1.47" />
+              <input type="submit" value="Save and Exit" name="17.2.1.3.1.1.1.49" />
+              <br />
+              <br />
+              <input id="CancelButton" type="submit" value="Cancel Changes" name="17.2.1.3.1.1.1.51" />
+              <input id="QuitButton" type="submit" value="Cancel and Exit" name="17.2.1.3.1.1.1.53" />
+              <input id="DeleteSessionButton" type="submit" value="Delete this Session" name="17.2.1.3.1.1.1.55" />
+            </td>
+          </tr>
+        </table>
+      </form>
+      <script type="text/javascript" src="/include/jquery-1.10.2.min.js">
+      </script>
+      <script type="text/javascript" src="/include/jquery-ui-1.10.3.custom.min.js">
+      </script>
+      <script type="text/javascript" src="/include/jquery.autocomplete.js">
+      </script>
+      <script>
+            var var0characterName;
+            var var1characterName;
+            var var2characterName;
+            var var3characterName;
+            var var4characterName;
+            var var5characterName;
+            
+
+            $(function() {
+
+            	$("#sessionDate").datepicker({
+            		dateFormat: "mm/dd/yy",
+            		maxDate: "0"
+            	});
+            	          
+            var0characterName = $("#0characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('0characterNumber').value = data;},
+params: {playerNum:'0', characterID:document.getElementById('0characterNumber').value, playerID:document.getElementById('0playerNumber').value, playerNum:'0', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+var1characterName = $("#1characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('1characterNumber').value = data;},
+params: {playerNum:'1', characterID:document.getElementById('1characterNumber').value, playerID:document.getElementById('1playerNumber').value, playerNum:'1', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+var2characterName = $("#2characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('2characterNumber').value = data;},
+params: {playerNum:'2', characterID:document.getElementById('2characterNumber').value, playerID:document.getElementById('2playerNumber').value, playerNum:'2', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+var3characterName = $("#3characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('3characterNumber').value = data;},
+params: {playerNum:'3', characterID:document.getElementById('3characterNumber').value, playerID:document.getElementById('3playerNumber').value, playerNum:'3', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+var4characterName = $("#4characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('4characterNumber').value = data;},
+params: {playerNum:'4', characterID:document.getElementById('4characterNumber').value, playerID:document.getElementById('4playerNumber').value, playerNum:'4', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+var5characterName = $("#5characterName").autocomplete({
+serviceUrl:'/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/getCharacterAutocomplete',
+noCache: true,
+onSelect: function(value, data) {document.getElementById('5characterNumber').value = data;},
+params: {playerNum:'5', characterID:document.getElementById('5characterNumber').value, playerID:document.getElementById('5playerNumber').value, playerNum:'5', sessionId:'EtXfNp25Bq9yX4lrttbFJ0', woinst:'156'},
+});
+
+
+            });
+      </script>
+    
+		</div>
+	
+	
+	
+	</div>
+
+  </body>
+</html>

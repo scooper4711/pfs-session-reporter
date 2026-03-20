@@ -12,6 +12,14 @@
 import fc from 'fast-check';
 import { GAME_SYSTEM_TO_SELECT_VALUE } from '../constants/selectors';
 
+// sessionStorage mock — must be set before content-script module loads,
+// because onPageLoad() calls sessionStorage.getItem at import time.
+(globalThis as Record<string, unknown>).sessionStorage = {
+  getItem: jest.fn().mockReturnValue(null),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+};
+
 // Chrome API mock — must be set before content-script module loads,
 // because it registers chrome.runtime.onMessage.addListener at import time.
 (globalThis as Record<string, unknown>).chrome = {

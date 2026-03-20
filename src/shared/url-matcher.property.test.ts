@@ -3,14 +3,16 @@ import { isPaizoReportingPage } from './url-matcher';
 
 // --- Arbitraries ---
 
-const PAIZO_REPORTING_BASE = 'https://www.paizo.com/organizedPlay/myAccount/eventReporter';
+const PAIZO_REPORTING_BASE = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent';
+const PAIZO_REPORTING_BASE_WWW = 'https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent';
 
 function paizoReportingUrlArbitrary(): fc.Arbitrary<string> {
   return fc.oneof(
     fc.constant(PAIZO_REPORTING_BASE),
-    fc.webPath().map((path) => `${PAIZO_REPORTING_BASE}${path}`),
+    fc.constant(PAIZO_REPORTING_BASE_WWW),
     fc.webQueryParameters().map((query) => `${PAIZO_REPORTING_BASE}?${query}`),
     fc.webFragments().map((fragment) => `${PAIZO_REPORTING_BASE}#${fragment}`),
+    fc.webQueryParameters().map((query) => `${PAIZO_REPORTING_BASE_WWW}?${query}`),
   );
 }
 
@@ -19,15 +21,15 @@ function nonPaizoUrlArbitrary(): fc.Arbitrary<string> {
     fc.webUrl().filter((url) => {
       try {
         const parsed = new URL(url);
-        return parsed.hostname !== 'www.paizo.com';
+        return parsed.hostname !== 'paizo.com' && parsed.hostname !== 'www.paizo.com';
       } catch {
         return true;
       }
     }),
+    fc.constant('https://paizo.com/store'),
+    fc.constant('https://paizo.com/organizedPlay/myAccount'),
     fc.constant('https://www.paizo.com/store'),
-    fc.constant('https://www.paizo.com/organizedPlay/myAccount'),
-    fc.constant('https://www.paizo.com/organizedPlay'),
-    fc.constant('https://paizo.com/organizedPlay/myAccount/eventReporter'),
+    fc.constant('https://example.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent'),
   );
 }
 
@@ -71,5 +73,10 @@ describe('URL Matcher Properties', () => {
       }),
       { numRuns: 100 },
     );
+  });
+
+  it('Property 11c: isPaizoReportingPage matches the real Paizo reporting URL', () => {
+    const realUrl = 'https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent?event=v5748mkg4iody&destinationPath=organizedplay%2FmyAccount';
+    expect(isPaizoReportingPage(realUrl)).toBe(true);
   });
 });

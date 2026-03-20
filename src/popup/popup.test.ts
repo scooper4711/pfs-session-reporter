@@ -93,7 +93,7 @@ const VALID_SESSION_REPORT = JSON.stringify({
 });
 
 const PAIZO_REPORTING_URL =
-  'https://www.paizo.com/organizedPlay/myAccount/eventReporter/12345';
+  'https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent?event=v5748mkg4iody';
 
 // --- Tests ---
 

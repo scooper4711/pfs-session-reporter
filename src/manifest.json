@@ -8,14 +8,18 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://www.paizo.com/organizedPlay/myAccount/eventReporter*"
+    "https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*",
+    "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.paizo.com/organizedPlay/myAccount/eventReporter*"],
+      "matches": [
+        "https://paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*",
+        "https://www.paizo.com/cgi-bin/WebObjects/Store.woa/wa/PathfinderSociety/reportEvent*"
+      ],
       "js": ["content/content-script.js"],
       "run_at": "document_idle"
     }

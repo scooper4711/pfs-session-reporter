@@ -204,7 +204,7 @@ Build a Chrome/Edge browser extension (Manifest V3) from scratch that reads Sess
     - Ensure all three entry points compile to dist/
     - _Requirements: 1.1, 1.5, 1.6, 1.7_
 
-- [-] 18. Final checkpoint - Verify clean build and commit
+- [x] 18. Final checkpoint - Verify clean build and commit
   - Ensure all tests pass and extension builds cleanly. Git commit with message: `chore: Final wiring and build verification`
 
 ## Notes

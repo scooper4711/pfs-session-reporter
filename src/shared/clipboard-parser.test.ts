@@ -3,8 +3,27 @@ import {
   decodeUtf16Le,
   parseClipboardData,
 } from './clipboard-parser';
-import { encodeUtf16LeBase64 } from '../../../pfs-chronicle-generator/scripts/model/session-report-serializer';
 import { SessionReport } from './types';
+
+// --- Test Helpers ---
+
+/**
+ * Encode a string as UTF-16LE bytes and return the base64 representation.
+ * Mirrors the encoding logic from pfs-chronicle-generator's
+ * session-report-serializer to avoid a cross-workspace import.
+ */
+function encodeUtf16LeBase64(text: string): string {
+  const bytes = new Uint8Array(text.length * 2);
+  for (let i = 0; i < text.length; i++) {
+    const codePoint = text.codePointAt(i) ?? 0;
+    bytes[i * 2] = codePoint & 0xFF;
+    bytes[i * 2 + 1] = codePoint >> 8;
+  }
+  const binaryString = Array.from(bytes, (byte) =>
+    String.fromCodePoint(byte),
+  ).join('');
+  return btoa(binaryString);
+}
 
 // --- Test Fixtures ---
 

@@ -259,6 +259,57 @@ expect(report.gmOrgPlayNumber).not.toBe(someOtherValue);
 3. Assertions that depend on `fc.pre` filtering individual fields → The filter is OR-based, not AND-based
 4. Comparing generated strings for inequality → Strings can coincidentally match
 
+## Spec Documents as Project Documentation
+
+The `.kiro/specs/` directory contains the living documentation for every feature, fix, and refactor. Each spec consists of three files: `requirements.md`, `design.md`, and `tasks.md`. These are not throwaway artifacts — they are the project's documentation and must be tracked in version control alongside the code they describe.
+
+**First Commit on Every Branch**:
+- The first commit on any feature, fix, or refactor branch MUST include the initial `requirements.md`, `design.md`, and `tasks.md` for the spec being worked on
+- Use the type prefix `docs:` for this commit (e.g., `docs: Add spec for clipboard validation`)
+- This establishes the baseline intent and plan before any code is written
+
+**Include Spec Changes in Task Commits**:
+- When completing a task, include any changes to `requirements.md`, `design.md`, or `tasks.md` in the same commit as the code changes
+- If a task reveals the need to update requirements or design (e.g., an edge case discovered during implementation), those updates belong in the commit that completes that task
+- When a task is marked complete in `tasks.md`, that change goes in the commit for that task's work
+- This keeps the documentation in sync with the code at every point in the commit history
+
+**Why This Matters**:
+- Any commit can be checked out and the spec documents will accurately reflect the state of the feature at that point
+- Requirements changes are traceable — you can see exactly which task prompted a requirement update
+- Task progress is visible in the git log without needing external tooling
+- Code reviewers can see the reasoning behind changes by reading the spec diffs in the same PR
+
+**Example Commit Sequence**:
+```
+docs: Add spec for form auto-fill feature         ← requirements.md, design.md, tasks.md
+feat: Add field mapping logic (task 1)            ← code + tasks.md (task 1 marked done)
+feat: Add validation for PFS numbers (task 2)     ← code + tasks.md (task 2 marked done)
+feat: Handle multi-table scenarios (task 3)       ← code + requirements.md (new edge case)
+                                                     + design.md (updated approach)
+                                                     + tasks.md (task 3 marked done)
+```
+
+## Testing Requirements for New Code
+
+All new features and bug fixes MUST include both unit tests and property-based tests. This is a hard requirement — code without tests will not meet the 80% coverage threshold and will be rejected in CI.
+
+**Unit Tests**:
+- Every new module MUST have a corresponding `.test.ts` file
+- Unit tests cover specific examples, edge cases, and integration points
+- Use mocks for external dependencies (APIs, browser globals, Foundry VTT)
+
+**Property-Based Tests**:
+- Every new module with pure functions or testable logic MUST have a corresponding `.pbt.test.ts` file
+- Property tests validate correctness properties defined in the design document
+- Use `fast-check` for property-based test generation
+- Each property test MUST run a minimum of 100 iterations
+
+**Why Both**:
+- Unit tests catch specific known edge cases and verify integration behavior
+- Property tests discover unknown edge cases through random input generation
+- Together they provide the coverage depth needed to maintain the 80% threshold
+
 ## Pre-Push Testing Requirements
 
 Before any `git push`, all tests MUST pass. Do NOT push code with failing tests.
@@ -313,6 +364,15 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 2. Wrap at 72 characters
 3. Explain what and why, not how
 4. Use bullet points if listing multiple changes
+
+**Commit Cognitive Complexity**:
+- Keep commits focused and easy to review — low cognitive complexity per commit
+- Aim for a small number of files changed per commit (ideally under 10)
+- Aim for a small number of lines changed per commit — prefer incremental progress over large drops
+- Each commit should represent one coherent unit of work that a reviewer can understand in a single sitting
+- If a task requires touching many files, consider whether it can be broken into smaller sub-tasks with their own commits
+- Avoid mixing unrelated changes in a single commit (e.g., don't combine a refactor with a new feature)
+- Spec document changes (requirements.md, design.md, tasks.md) don't count against this — they provide context, not cognitive load
 
 **Branch Naming**:
 - Feature work: `feat/<feature-name>`

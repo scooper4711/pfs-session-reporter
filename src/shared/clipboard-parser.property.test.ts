@@ -1,5 +1,7 @@
 import fc from 'fast-check';
-import { parseClipboardData } from './clipboard-parser';
+import { parseClipboardData, detectEncoding, decodeUtf16Le } from './clipboard-parser';
+import { serializeSessionReport, encodeUtf16LeBase64 } from '../../../pfs-chronicle-generator/scripts/model/session-report-serializer';
+import type { SessionReport as GeneratorSessionReport } from '../../../pfs-chronicle-generator/scripts/model/session-report-types';
 import { SessionReport, SignUp, BonusRep } from './types';
 
 // --- Arbitraries ---
@@ -130,6 +132,88 @@ describe('Clipboard Parser Properties', () => {
           expect(result).toBeNull();
         },
       ),
+      { numRuns: 100 },
+    );
+  });
+
+  /**
+   * Feature: utf16le-clipboard-encoding, Property 1: UTF-16LE Encoding Detection
+   * Validates: Requirements 1.2, 6.4
+   */
+  it('Property 1: detectEncoding returns utf-16le for UTF-16LE base64 payloads', () => {
+    fc.assert(
+      fc.property(sessionReportArbitrary, (report) => {
+        const generatorReport = report as unknown as GeneratorSessionReport;
+        const base64Payload = serializeSessionReport(generatorReport, false);
+        const binaryString = atob(base64Payload);
+        expect(detectEncoding(binaryString)).toBe('utf-16le');
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  /**
+   * Feature: utf16le-clipboard-encoding, Property 2: UTF-8 Encoding Detection
+   * Validates: Requirements 1.3, 1.4, 6.5
+   */
+  it('Property 2: detectEncoding returns utf-8 for UTF-8 base64 payloads', () => {
+    const asciiFieldArbitrary = fc.string({
+      minLength: 1,
+      maxLength: 30,
+      unit: 'grapheme-ascii' as const,
+    });
+
+    const asciiJsonObjectArbitrary = fc.record({
+      name: asciiFieldArbitrary,
+      value: asciiFieldArbitrary,
+      count: fc.integer({ min: 0, max: 9999 }),
+    });
+
+    fc.assert(
+      fc.property(asciiJsonObjectArbitrary, (obj) => {
+        const json = JSON.stringify(obj);
+        const base64 = btoa(json);
+        const binaryString = atob(base64);
+        expect(detectEncoding(binaryString)).toBe('utf-8');
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  /**
+   * Feature: utf16le-clipboard-encoding, Property 3: UTF-16LE Decode Round-Trip
+   * Validates: Requirements 2.2, 5.2, 5.4
+   */
+  it('Property 3: encodeUtf16LeBase64 then decodeUtf16Le round-trips to original string', () => {
+    const asciiStringArbitrary = fc.string({
+      minLength: 0,
+      maxLength: 200,
+      unit: 'grapheme-ascii' as const,
+    });
+
+    fc.assert(
+      fc.property(asciiStringArbitrary, (original) => {
+        const base64Encoded = encodeUtf16LeBase64(original);
+        const binaryString = atob(base64Encoded);
+        const decoded = decodeUtf16Le(binaryString);
+        expect(decoded).toBe(original);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  /**
+   * Feature: utf16le-clipboard-encoding, Property 4: UTF-16LE End-to-End Round-Trip
+   * Validates: Requirements 6.1
+   */
+  it('Property 4: serializeSessionReport UTF-16LE then parseClipboardData round-trips to original', () => {
+    fc.assert(
+      fc.property(sessionReportArbitrary, (report) => {
+        const generatorReport = report as unknown as GeneratorSessionReport;
+        const base64Payload = serializeSessionReport(generatorReport, false);
+        const result = parseClipboardData(base64Payload);
+        expect(result).toEqual(report);
+      }),
       { numRuns: 100 },
     );
   });

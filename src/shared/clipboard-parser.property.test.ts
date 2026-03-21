@@ -1,8 +1,33 @@
 import fc from 'fast-check';
 import { parseClipboardData, detectEncoding, decodeUtf16Le } from './clipboard-parser';
-import { serializeSessionReport, encodeUtf16LeBase64 } from '../../../pfs-chronicle-generator/scripts/model/session-report-serializer';
-import type { SessionReport as GeneratorSessionReport } from '../../../pfs-chronicle-generator/scripts/model/session-report-types';
 import { SessionReport, SignUp, BonusRep } from './types';
+
+// --- Local test helpers ---
+// Mirrors encoding logic from pfs-chronicle-generator to avoid cross-workspace imports.
+
+function encodeUtf16LeBase64(text: string): string {
+  const bytes = new Uint8Array(text.length * 2);
+  for (let i = 0; i < text.length; i++) {
+    const codePoint = text.codePointAt(i) ?? 0;
+    bytes[i * 2] = codePoint & 0xFF;
+    bytes[i * 2 + 1] = codePoint >> 8;
+  }
+  const binaryString = Array.from(bytes, (byte) =>
+    String.fromCodePoint(byte),
+  ).join('');
+  return btoa(binaryString);
+}
+
+function serializeSessionReport(
+  report: SessionReport,
+  skipBase64?: boolean,
+): string {
+  const json = JSON.stringify(report);
+  if (skipBase64) {
+    return json;
+  }
+  return encodeUtf16LeBase64(json);
+}
 
 // --- Arbitraries ---
 // Use grapheme-ascii unit so btoa() works on JSON.stringify output
@@ -143,8 +168,7 @@ describe('Clipboard Parser Properties', () => {
   it('Property 1: detectEncoding returns utf-16le for UTF-16LE base64 payloads', () => {
     fc.assert(
       fc.property(sessionReportArbitrary, (report) => {
-        const generatorReport = report as unknown as GeneratorSessionReport;
-        const base64Payload = serializeSessionReport(generatorReport, false);
+        const base64Payload = serializeSessionReport(report, false);
         const binaryString = atob(base64Payload);
         expect(detectEncoding(binaryString)).toBe('utf-16le');
       }),
@@ -209,8 +233,7 @@ describe('Clipboard Parser Properties', () => {
   it('Property 4: serializeSessionReport UTF-16LE then parseClipboardData round-trips to original', () => {
     fc.assert(
       fc.property(sessionReportArbitrary, (report) => {
-        const generatorReport = report as unknown as GeneratorSessionReport;
-        const base64Payload = serializeSessionReport(generatorReport, false);
+        const base64Payload = serializeSessionReport(report, false);
         const result = parseClipboardData(base64Payload);
         expect(result).toEqual(report);
       }),

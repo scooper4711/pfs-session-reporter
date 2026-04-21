@@ -289,6 +289,242 @@ describe('onMessage listener', () => {
   });
 });
 
+// --- Bonus Reputation DOM Helpers ---
+
+/**
+ * Builds HTML for a single faction objective checkbox row matching the
+ * Paizo form structure: <tr><td>Label</td><td><input .../></td><td>(N prestige)</td></tr>
+ */
+function buildFactionCheckboxRow(
+  nameAttr: string,
+  factionTitle: string,
+  prestigeLabel: string,
+): string {
+  return `
+    <tr>
+      <td>${factionTitle}:  </td>
+      <td><input type="checkbox" name="${nameAttr}" title="${factionTitle}" /></td>
+      <td>${prestigeLabel}</td>
+    </tr>
+  `;
+}
+
+/**
+ * Adds GM and character faction objective checkbox tables to the form DOM.
+ * Each faction gets a row in both the GM and character checkbox tables.
+ */
+function addFactionCheckboxesToDom(
+  factions: Array<{ name: string; prestige: number }>,
+): void {
+  const form = document.querySelector('form[name="editObject"]');
+  if (!form) return;
+
+  let gmRows = '';
+  let charRows = '';
+  factions.forEach((faction, index) => {
+    const gmName = `17.2.1.3.1.1.1.31.1.${index}.3`;
+    const charName = `17.2.1.3.1.1.1.33.1.${index}.3`;
+    const label = `(${faction.prestige} prestige)`;
+    gmRows += buildFactionCheckboxRow(gmName, faction.name, label);
+    charRows += buildFactionCheckboxRow(charName, faction.name, label);
+  });
+
+  const tableHtml = `
+    <table class="gm-faction-objectives">${gmRows}</table>
+    <table class="char-faction-objectives">${charRows}</table>
+  `;
+  form.insertAdjacentHTML('beforeend', tableHtml);
+}
+
+/**
+ * Sets up the form DOM in Phase 3 state (session type and scenario already selected).
+ */
+function setupPhase3Dom(): void {
+  buildFormDom();
+  const sessionTypeSelect = document.querySelector<HTMLSelectElement>(SELECTORS.sessionTypeSelect);
+  sessionTypeSelect!.value = GAME_SYSTEM_TO_SELECT_VALUE['PFS2E'];
+  const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+  scenarioSelect!.value = TEST_SCENARIO_OPTION_VALUE;
+}
+
+/**
+ * Triggers Phase 3 by sending a fillForm message with the given pending report.
+ */
+function triggerPhase3(pending: PendingReport): void {
+  mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+  messageHandler({ type: 'fillForm', pendingReport: pending });
+}
+
+describe('Phase 3 bonus reputation integration', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+    setupPhase3Dom();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('checks the correct DOM checkboxes when bonusRepEarned matches', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+      { name: 'Vigilant Seal', prestige: 2 },
+    ]);
+
+    const pending = createPendingReport({
+      bonusRepEarned: [
+        { faction: 'Verdant Wheel', reputation: 2 },
+        { faction: 'Vigilant Seal', reputation: 2 },
+      ],
+    });
+    triggerPhase3(pending);
+
+    const gmCheckbox0 = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.0.3"]',
+    );
+    const gmCheckbox1 = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.1.3"]',
+    );
+    const charCheckbox0 = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.33.1.0.3"]',
+    );
+    const charCheckbox1 = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.33.1.1.3"]',
+    );
+
+    expect(gmCheckbox0!.checked).toBe(true);
+    expect(gmCheckbox1!.checked).toBe(true);
+    expect(charCheckbox0!.checked).toBe(true);
+    expect(charCheckbox1!.checked).toBe(true);
+  });
+
+  it('completes without error when bonusRepEarned is empty', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+    ]);
+
+    const pending = createPendingReport({ bonusRepEarned: [] });
+    triggerPhase3(pending);
+
+    // Checkboxes remain unchecked
+    const gmCheckbox = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.0.3"]',
+    );
+    expect(gmCheckbox!.checked).toBe(false);
+
+    // Success message sent without errors
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'success' }),
+    );
+  });
+
+  it('includes warning in success message for unmatched faction', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+    ]);
+
+    const pending = createPendingReport({
+      bonusRepEarned: [
+        { faction: 'Nonexistent Faction', reputation: 2 },
+      ],
+    });
+    triggerPhase3(pending);
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'success',
+        message: expect.stringContaining('Nonexistent Faction'),
+      }),
+    );
+
+    // Other fields still populated (player row)
+    const playerNumber = document.querySelector<HTMLInputElement>('[id="0playerNumber"]');
+    expect(playerNumber!.value).toBe('67890');
+  });
+
+  it('includes warning in success message for prestige mismatch and checkbox is still checked', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+    ]);
+
+    const pending = createPendingReport({
+      bonusRepEarned: [
+        { faction: 'Verdant Wheel', reputation: 1 },
+      ],
+    });
+    triggerPhase3(pending);
+
+    // Checkbox is still checked despite mismatch
+    const gmCheckbox = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.0.3"]',
+    );
+    expect(gmCheckbox!.checked).toBe(true);
+
+    // Warning in success message
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'success',
+        message: expect.stringContaining('Warning: Verdant Wheel reputation is 1 in session report but 2 on form'),
+      }),
+    );
+  });
+
+  it('includes bonus rep count in success message', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+      { name: 'Vigilant Seal', prestige: 2 },
+    ]);
+
+    const pending = createPendingReport({
+      bonusRepEarned: [
+        { faction: 'Verdant Wheel', reputation: 2 },
+        { faction: 'Vigilant Seal', reputation: 2 },
+      ],
+    });
+    triggerPhase3(pending);
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'success',
+        message: expect.stringContaining('2 extra reputation faction(s) checked.'),
+      }),
+    );
+  });
+
+  it('extractCheckboxData correctly reads title and sibling <td> text from DOM', () => {
+    addFactionCheckboxesToDom([
+      { name: 'Verdant Wheel', prestige: 2 },
+      { name: 'Vigilant Seal', prestige: 4 },
+    ]);
+
+    // Trigger Phase 3 with matching factions to exercise extractCheckboxData
+    const pending = createPendingReport({
+      bonusRepEarned: [
+        { faction: 'Verdant Wheel', reputation: 2 },
+        { faction: 'Vigilant Seal', reputation: 4 },
+      ],
+    });
+    triggerPhase3(pending);
+
+    // Both GM and character checkboxes should be checked — proves extractCheckboxData
+    // correctly read the title attributes and matched them to bonusRepEarned factions
+    const gmVerdant = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.0.3"]',
+    );
+    const gmVigilant = document.querySelector<HTMLInputElement>(
+      'input[name="17.2.1.3.1.1.1.31.1.1.3"]',
+    );
+    expect(gmVerdant!.checked).toBe(true);
+    expect(gmVigilant!.checked).toBe(true);
+
+    // No prestige mismatch warnings — proves extractCheckboxData correctly read
+    // the sibling <td> prestige label text "(2 prestige)" and "(4 prestige)"
+    const successCall = sendMessageMock.mock.calls[0][0];
+    expect(successCall.message).not.toContain('Warning:');
+    expect(successCall.message).toContain('2 extra reputation faction(s) checked.');
+  });
+});
+
 describe('error handling', () => {
   beforeEach(() => {
     clearMocksAndStorage();

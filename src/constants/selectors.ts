@@ -20,6 +20,10 @@ export const SELECTORS = {
   reportingC: '[name="17.2.1.3.1.1.1.27.5"]',
   reportingD: '[name="17.2.1.3.1.1.1.27.7"]',
 
+  // Special faction objective checkboxes
+  gmFactionObjectiveCheckboxes: 'input[name^="17.2.1.3.1.1.1.31.1."]',
+  characterFactionObjectiveCheckboxes: 'input[name^="17.2.1.3.1.1.1.33.1."]',
+
   // Player row templates (N = 0-5)
   // IDs start with digits, so use attribute selectors
   playerNumber: (n: number): string => `[id="${n}playerNumber"]`,

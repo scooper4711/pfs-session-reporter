@@ -22,6 +22,8 @@ import { findFactionOptionValue } from '../shared/faction-map';
 import { findScenarioOption } from '../shared/scenario-matcher';
 import { extractGmSignUp, extractPlayerSignUps } from '../shared/signup-utils';
 import { isExpired } from '../shared/timeout-utils';
+import type { CheckboxData, BonusRepResult } from '../shared/bonus-rep';
+import { processBonusReputation } from '../shared/bonus-rep';
 
 /**
  * Pure phase detection logic that determines the workflow phase
@@ -270,6 +272,81 @@ function populateDateAndFlags(report: SessionReport): void {
 }
 
 /**
+ * Extracts CheckboxData from a NodeList of checkbox input elements.
+ *
+ * For each checkbox, reads the title attribute and the text content
+ * of the next sibling <td> element (the prestige label). Uses the
+ * checkbox name attribute as the identifier for DOM correlation.
+ */
+function extractCheckboxData(
+  checkboxes: NodeListOf<HTMLInputElement>,
+): CheckboxData[] {
+  const data: CheckboxData[] = [];
+  for (const checkbox of checkboxes) {
+    const title = checkbox.title;
+    const parentTd = checkbox.closest('td');
+    const siblingTd = parentTd?.nextElementSibling as HTMLTableCellElement | null;
+    const prestigeLabelText = siblingTd?.textContent?.trim() ?? null;
+
+    data.push({
+      title,
+      prestigeLabelText,
+      identifier: checkbox.name,
+    });
+  }
+  return data;
+}
+
+/**
+ * Populates special faction objective checkboxes based on bonusRepEarned data.
+ *
+ * Queries the DOM for GM and character faction objective checkboxes,
+ * extracts their data, delegates matching to processBonusReputation,
+ * then sets .checked = true on matched checkboxes and logs warnings.
+ */
+function populateBonusReputation(report: SessionReport): BonusRepResult {
+  const gmCheckboxes = document.querySelectorAll<HTMLInputElement>(
+    SELECTORS.gmFactionObjectiveCheckboxes,
+  );
+  const charCheckboxes = document.querySelectorAll<HTMLInputElement>(
+    SELECTORS.characterFactionObjectiveCheckboxes,
+  );
+
+  const gmCheckboxData = extractCheckboxData(gmCheckboxes);
+  const charCheckboxData = extractCheckboxData(charCheckboxes);
+
+  const result = processBonusReputation(
+    report.bonusRepEarned,
+    gmCheckboxData,
+    charCheckboxData,
+  );
+
+  for (const match of result.gmMatches) {
+    const checkbox = document.querySelector<HTMLInputElement>(
+      `input[name="${match.checkboxIdentifier}"]`,
+    );
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  }
+
+  for (const match of result.characterMatches) {
+    const checkbox = document.querySelector<HTMLInputElement>(
+      `input[name="${match.checkboxIdentifier}"]`,
+    );
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  }
+
+  for (const warning of result.warnings) {
+    console.warn(warning);
+  }
+
+  return result;
+}
+
+/**
  * Populates a single player row on the form.
  */
 function populatePlayerRow(index: number, player: SignUp): void {
@@ -329,14 +406,25 @@ function executePhase3(report: SessionReport): void {
 
   populateGmFields(report);
   populateDateAndFlags(report);
+  const bonusRepResult = populateBonusReputation(report);
   populatePlayerRows(report);
 
   clearPendingReport();
 
   const playerCount = extractPlayerSignUps(report.signUps).length;
+  let message = `Form filled successfully. ${playerCount} player row(s) populated.`;
+
+  if (bonusRepResult.matchedCount > 0) {
+    message += ` ${bonusRepResult.matchedCount} extra reputation faction(s) checked.`;
+  }
+
+  for (const warning of bonusRepResult.warnings) {
+    message += ` ${warning}`;
+  }
+
   sendMessage({
     type: 'success',
-    message: `Form filled successfully. ${playerCount} player row(s) populated.`,
+    message,
     scenario: report.scenario,
   });
 }

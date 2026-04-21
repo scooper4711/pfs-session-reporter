@@ -49,7 +49,7 @@ function validDateArbitrary(): fc.Arbitrary<string> {
 function validSessionReportArbitrary(): fc.Arbitrary<SessionReport> {
   return fc.record({
     gameDate: validDateArbitrary(),
-    gameSystem: fc.constant('PFS2E' as string),
+    gameSystem: fc.constantFrom('PFS2E', 'SFS2E'),
     generateGmChronicle: fc.boolean(),
     gmOrgPlayNumber: fc.integer({ min: 1, max: 999999 }),
     repEarned: fc.integer({ min: 0, max: 20 }),
@@ -148,7 +148,7 @@ describe('Validation Properties', () => {
       fc.assert(
         fc.property(
           validSessionReportArbitrary(),
-          fc.constantFrom('PFS1E', 'SFS2E', 'UNKNOWN', ''),
+          fc.constantFrom('PFS1E', 'UNKNOWN', ''),
           (report, badSystem) => {
             const invalid = { ...report, gameSystem: badSystem };
             const result = validateSessionReport(invalid);

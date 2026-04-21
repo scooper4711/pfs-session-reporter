@@ -47,14 +47,15 @@ describe('Scenario Matcher Properties', () => {
    * Feature: paizo-session-report-browser-plugin, Property 7: Scenario number extraction and matching
    * Validates: Requirements 5.1, 5.2
    */
-  it('Property 7: extractScenarioNumber extracts N-MM from "PFS2E N-MM" and findScenarioOption finds matching option', () => {
+  it('Property 7: extractScenarioNumber extracts N-MM from scenario strings and findScenarioOption finds matching option', () => {
     fc.assert(
       fc.property(
+        fc.constantFrom('PFS2E', 'SFS2E'),
         scenarioNumberArbitrary(),
         scenarioTitleArbitrary(),
         optionValueArbitrary(),
-        ({ n, mm }, title, optionValue) => {
-          const scenarioString = `PFS2E ${n}-${mm}`;
+        (prefix, { n, mm }, title, optionValue) => {
+          const scenarioString = `${prefix} ${n}-${mm}`;
           const expectedNumber = `${n}-${mm}`;
 
           // Verify extraction produces the correct scenario number
@@ -79,10 +80,11 @@ describe('Scenario Matcher Properties', () => {
   it('Property 7a: findScenarioOption returns null when no option matches the scenario', () => {
     fc.assert(
       fc.property(
+        fc.constantFrom('PFS2E', 'SFS2E'),
         scenarioNumberArbitrary(),
         scenarioTitleArbitrary(),
-        ({ n, mm }, title) => {
-          const scenarioString = `PFS2E ${n}-${mm}`;
+        (prefix, { n, mm }, title) => {
+          const scenarioString = `${prefix} ${n}-${mm}`;
           const expectedNumber = `${n}-${mm}`;
 
           // Create a select with an option that does NOT contain the matching pattern

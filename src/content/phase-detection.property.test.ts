@@ -153,3 +153,116 @@ describe('Phase Detection Properties', () => {
     );
   });
 });
+
+describe('Phase Detection Properties — SFS2E', () => {
+  /**
+   * Feature: starfinder-society-reporting, Property 3: Phase detection works for SFS2E game system value
+   * Validates: Requirements 6.1, 6.2, 6.3
+   */
+  it('Property 6a-SFS2E: returns session-type when session type value does not match SFS2E expected value', () => {
+    fc.assert(
+      fc.property(
+        selectValueArbitrary(),
+        selectValueArbitrary(),
+        selectValueArbitrary(),
+        (wrongSessionType, scenarioMatch, currentScenario) => {
+          const expectedValue = GAME_SYSTEM_TO_SELECT_VALUE['SFS2E'];
+          fc.pre(wrongSessionType !== expectedValue);
+
+          const phase = determinePhase(
+            wrongSessionType,
+            expectedValue,
+            scenarioMatch,
+            currentScenario,
+          );
+          expect(phase).toBe('session-type');
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('Property 6b-SFS2E: returns session-type when session type select is missing (null)', () => {
+    fc.assert(
+      fc.property(
+        selectValueArbitrary(),
+        selectValueArbitrary(),
+        (scenarioMatch, currentScenario) => {
+          const expectedValue = GAME_SYSTEM_TO_SELECT_VALUE['SFS2E'];
+
+          const phase = determinePhase(
+            null,
+            expectedValue,
+            scenarioMatch,
+            currentScenario,
+          );
+          expect(phase).toBe('session-type');
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('Property 6c-SFS2E: returns scenario when SFS2E session type matches but scenario does not match', () => {
+    fc.assert(
+      fc.property(
+        selectValueArbitrary(),
+        selectValueArbitrary(),
+        (scenarioMatchValue, currentScenarioValue) => {
+          fc.pre(scenarioMatchValue !== currentScenarioValue);
+
+          const expectedSessionType = GAME_SYSTEM_TO_SELECT_VALUE['SFS2E'];
+
+          const phase = determinePhase(
+            expectedSessionType,
+            expectedSessionType,
+            scenarioMatchValue,
+            currentScenarioValue,
+          );
+          expect(phase).toBe('scenario');
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('Property 6d-SFS2E: returns scenario when scenario select is missing (null current value)', () => {
+    fc.assert(
+      fc.property(
+        selectValueArbitrary(),
+        (scenarioMatchValue) => {
+          const expectedSessionType = GAME_SYSTEM_TO_SELECT_VALUE['SFS2E'];
+
+          const phase = determinePhase(
+            expectedSessionType,
+            expectedSessionType,
+            scenarioMatchValue,
+            null,
+          );
+          expect(phase).toBe('scenario');
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('Property 6e-SFS2E: returns fill-fields when both SFS2E session type and scenario match', () => {
+    fc.assert(
+      fc.property(
+        selectValueArbitrary(),
+        (scenarioValue) => {
+          const expectedSessionType = GAME_SYSTEM_TO_SELECT_VALUE['SFS2E'];
+
+          const phase = determinePhase(
+            expectedSessionType,
+            expectedSessionType,
+            scenarioValue,
+            scenarioValue,
+          );
+          expect(phase).toBe('fill-fields');
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});

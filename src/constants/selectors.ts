@@ -51,4 +51,5 @@ export const TIMEOUT_MS = 30_000;
 
 export const GAME_SYSTEM_TO_SELECT_VALUE: Record<string, string> = {
   PFS2E: '4',
+  SFS2E: '5',
 };

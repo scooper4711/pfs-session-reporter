@@ -19,6 +19,20 @@
     </div>
 
     <div id="status" class="status hidden" role="alert" aria-live="assertive"></div>
+
+    <div id="manualSelection" class="manual-selection hidden">
+      <div class="manual-selection-header">Scenario not found</div>
+      <p class="manual-selection-scenario" id="manualScenarioName"></p>
+      <p class="manual-selection-instructions">
+        Select the correct scenario from the dropdown on the Paizo form, then click Continue.
+      </p>
+      <button id="continueButton" type="button" class="continue-button">
+        Continue with Selected Scenario
+      </button>
+      <button id="cancelButton" type="button" class="cancel-button">
+        Cancel
+      </button>
+    </div>
   </div>
 
   <script src="popup.js"></script>

@@ -97,3 +97,48 @@ button:disabled {
   background-color: #e6f4ea;
   color: #137333;
 }
+
+.manual-selection {
+  margin-top: 12px;
+}
+
+.manual-selection-header {
+  font-weight: 600;
+  font-size: 14px;
+  color: #b06000;
+  margin-bottom: 8px;
+}
+
+.manual-selection-scenario {
+  font-size: 13px;
+  color: #1a1a1a;
+  background-color: #f5f5f5;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-family: monospace;
+}
+
+.manual-selection-instructions {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.continue-button {
+  background-color: #137333;
+  margin-bottom: 8px;
+}
+
+.continue-button:hover {
+  background-color: #0d5a27;
+}
+
+.cancel-button {
+  background-color: #5f6368;
+}
+
+.cancel-button:hover {
+  background-color: #4a4e51;
+}

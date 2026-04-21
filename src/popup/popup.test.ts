@@ -52,6 +52,19 @@ function setupPopupDom(): void {
         <span>Filling form…</span>
       </div>
       <div id="status" class="status hidden" role="alert" aria-live="assertive"></div>
+      <div id="manualSelection" class="manual-selection hidden">
+        <div class="manual-selection-header">Scenario not found</div>
+        <p class="manual-selection-scenario" id="manualScenarioName"></p>
+        <p class="manual-selection-instructions">
+          Select the correct scenario from the dropdown on the Paizo form, then click Continue.
+        </p>
+        <button id="continueButton" type="button" class="continue-button">
+          Continue with Selected Scenario
+        </button>
+        <button id="cancelButton" type="button" class="cancel-button">
+          Cancel
+        </button>
+      </div>
     </div>
   `;
 }
@@ -362,6 +375,165 @@ describe('Popup Module', () => {
       const statusText = getStatus().textContent ?? '';
       expect(statusText).toContain('Form filled successfully');
       expect(statusText).not.toContain('Scenario:');
+    });
+  });
+
+  describe('manual selection UI', () => {
+    beforeEach(async () => {
+      mockTabsQuery.mockResolvedValue([{ url: PAIZO_REPORTING_URL }]);
+      await loadPopupModule();
+    });
+
+    function getManualSelection(): HTMLElement {
+      return document.querySelector<HTMLElement>('#manualSelection')!;
+    }
+
+    function getManualScenarioName(): HTMLElement {
+      return document.querySelector<HTMLElement>('#manualScenarioName')!;
+    }
+
+    function getContinueButton(): HTMLButtonElement {
+      return document.querySelector<HTMLButtonElement>('#continueButton')!;
+    }
+
+    function getCancelButton(): HTMLButtonElement {
+      return document.querySelector<HTMLButtonElement>('#cancelButton')!;
+    }
+
+    function getMessageListener(): (message: Record<string, unknown>) => void {
+      expect(mockOnMessageAddListener).toHaveBeenCalled();
+      const lastCall = mockOnMessageAddListener.mock.calls.length - 1;
+      return mockOnMessageAddListener.mock.calls[lastCall][0];
+    }
+
+    it('showManualSelection hides fill button and shows manual selection panel with scenario name', () => {
+      const listener = getMessageListener();
+
+      listener({ type: 'manualScenarioRequired', scenario: 'PFS2E 7-99' });
+
+      expect(getButton().classList.contains('hidden')).toBe(true);
+      expect(getManualSelection().classList.contains('hidden')).toBe(false);
+      expect(getManualScenarioName().textContent).toBe('PFS2E 7-99');
+    });
+
+    it('hideManualSelection hides manual selection panel and re-shows fill button', () => {
+      const listener = getMessageListener();
+
+      // First show manual selection
+      listener({ type: 'manualScenarioRequired', scenario: 'PFS2E 7-99' });
+      expect(getManualSelection().classList.contains('hidden')).toBe(false);
+
+      // Then cancel to hide it
+      getCancelButton().click();
+
+      expect(getManualSelection().classList.contains('hidden')).toBe(true);
+      expect(getButton().classList.contains('hidden')).toBe(false);
+      expect(getButton().disabled).toBe(false);
+    });
+
+    it('Continue button sends continueWithScenario message', () => {
+      mockRuntimeSendMessage.mockClear();
+
+      getContinueButton().click();
+
+      expect(mockRuntimeSendMessage).toHaveBeenCalledWith({
+        type: 'continueWithScenario',
+      });
+    });
+
+    it('Cancel button sends cancelManualSelection message and hides manual selection panel', () => {
+      const listener = getMessageListener();
+
+      // Show manual selection first
+      listener({ type: 'manualScenarioRequired', scenario: 'PFS2E 7-99' });
+      mockRuntimeSendMessage.mockClear();
+
+      getCancelButton().click();
+
+      expect(mockRuntimeSendMessage).toHaveBeenCalledWith({
+        type: 'cancelManualSelection',
+      });
+      expect(getManualSelection().classList.contains('hidden')).toBe(true);
+      expect(getButton().classList.contains('hidden')).toBe(false);
+    });
+
+    it('message listener shows manual selection panel for manualScenarioRequired', () => {
+      const listener = getMessageListener();
+
+      listener({ type: 'manualScenarioRequired', scenario: 'SFS2E 3-01' });
+
+      expect(getManualSelection().classList.contains('hidden')).toBe(false);
+      expect(getManualScenarioName().textContent).toBe('SFS2E 3-01');
+      expect(getButton().classList.contains('hidden')).toBe(true);
+    });
+
+    it('message listener shows manual selection panel for manualSelectionActive', () => {
+      const listener = getMessageListener();
+
+      listener({ type: 'manualSelectionActive', scenario: 'PFS2E 5-10' });
+
+      expect(getManualSelection().classList.contains('hidden')).toBe(false);
+      expect(getManualScenarioName().textContent).toBe('PFS2E 5-10');
+      expect(getButton().classList.contains('hidden')).toBe(true);
+    });
+
+    it('error during manual selection hides manual selection panel', () => {
+      const listener = getMessageListener();
+
+      // Show manual selection first
+      listener({ type: 'manualScenarioRequired', scenario: 'PFS2E 7-99' });
+      expect(getManualSelection().classList.contains('hidden')).toBe(false);
+
+      // Receive an error
+      listener({ type: 'error', message: 'No pending report found.' });
+
+      expect(getManualSelection().classList.contains('hidden')).toBe(true);
+      expect(getButton().classList.contains('hidden')).toBe(false);
+      expect(getStatus().textContent).toContain('No pending report found.');
+      expect(getStatus().classList.contains('error')).toBe(true);
+    });
+  });
+
+  describe('Option/Alt key detection', () => {
+    beforeEach(async () => {
+      mockTabsQuery.mockResolvedValue([{ url: PAIZO_REPORTING_URL }]);
+      await loadPopupModule();
+    });
+
+    it('includes forceManualScenario: true when altKey is true', async () => {
+      mockReadText.mockResolvedValue(VALID_SESSION_REPORT);
+      mockRuntimeSendMessage.mockClear();
+
+      const clickEvent = new MouseEvent('click', { altKey: true });
+      getButton().dispatchEvent(clickEvent);
+      await new Promise(process.nextTick);
+      await new Promise(process.nextTick);
+
+      const calls = mockRuntimeSendMessage.mock.calls;
+      const fillFormCall = calls.find(
+        (call: unknown[]) => (call[0] as Record<string, unknown>).type === 'fillForm',
+      );
+      expect(fillFormCall).toBeDefined();
+      const sentMessage = fillFormCall![0] as Record<string, unknown>;
+      expect(sentMessage.forceManualScenario).toBe(true);
+    });
+
+    it('does not include forceManualScenario when altKey is false', async () => {
+      mockReadText.mockResolvedValue(VALID_SESSION_REPORT);
+      mockRuntimeSendMessage.mockClear();
+
+      const clickEvent = new MouseEvent('click', { altKey: false });
+      getButton().dispatchEvent(clickEvent);
+      await new Promise(process.nextTick);
+      await new Promise(process.nextTick);
+
+      const calls = mockRuntimeSendMessage.mock.calls;
+      const fillFormCall = calls.find(
+        (call: unknown[]) => (call[0] as Record<string, unknown>).type === 'fillForm',
+      );
+      expect(fillFormCall).toBeDefined();
+      const sentMessage = fillFormCall![0] as Record<string, unknown>;
+      expect(sentMessage.forceManualScenario).toBeUndefined();
     });
   });
 });

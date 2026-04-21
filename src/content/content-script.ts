@@ -14,6 +14,8 @@
 import {
   SELECTORS,
   STORAGE_KEY,
+  MANUAL_SELECTION_KEY,
+  FORCE_MANUAL_KEY,
   GAME_SYSTEM_TO_SELECT_VALUE,
 } from '../constants/selectors';
 import { SessionReport, PendingReport, Phase, SignUp } from '../shared/types';
@@ -22,6 +24,9 @@ import { findFactionOptionValue } from '../shared/faction-map';
 import { findScenarioOption } from '../shared/scenario-matcher';
 import { extractGmSignUp, extractPlayerSignUps } from '../shared/signup-utils';
 import { isExpired } from '../shared/timeout-utils';
+import { isScenarioSelected } from '../content/manual-selection';
+import type { CheckboxData, BonusRepResult } from '../shared/bonus-rep';
+import { processBonusReputation } from '../shared/bonus-rep';
 
 /**
  * Pure phase detection logic that determines the workflow phase
@@ -177,6 +182,25 @@ function clearPendingReport(): void {
 }
 
 /**
+ * Enters manual selection mode by setting the manual selection flag
+ * in sessionStorage and notifying the popup.
+ */
+function enterManualSelectionMode(scenario: string): void {
+  sessionStorage.setItem(MANUAL_SELECTION_KEY, 'true');
+  sendMessage({ type: 'manualScenarioRequired', scenario });
+}
+
+/**
+ * Clears all workflow state from sessionStorage: the pending report,
+ * the manual selection flag, and the force-manual flag.
+ */
+function clearAllWorkflowState(): void {
+  clearPendingReport();
+  sessionStorage.removeItem(MANUAL_SELECTION_KEY);
+  sessionStorage.removeItem(FORCE_MANUAL_KEY);
+}
+
+/**
  * Phase 1: Set the session type dropdown and submit the form.
  *
  * Sets the value directly WITHOUT dispatching a change event to avoid
@@ -211,7 +235,8 @@ function executePhase1(report: SessionReport): void {
  *
  * Uses ScenarioMatcher to find the matching option. Sets the value
  * directly WITHOUT dispatching a change event. Then calls form.submit().
- * If no match is found, clears Pending_Report and sends an error.
+ * If no match is found, enters manual selection mode instead of erroring.
+ * If the force-manual flag is set, skips matching and enters manual mode directly.
  */
 function executePhase2(report: SessionReport): void {
   const scenarioSelect = document.querySelector<HTMLSelectElement>(
@@ -228,13 +253,16 @@ function executePhase2(report: SessionReport): void {
     return;
   }
 
+  const forceManual = sessionStorage.getItem(FORCE_MANUAL_KEY) === 'true';
+  if (forceManual) {
+    sessionStorage.removeItem(FORCE_MANUAL_KEY);
+    enterManualSelectionMode(report.scenario);
+    return;
+  }
+
   const matchingValue = findScenarioOption(scenarioSelect, report.scenario);
   if (!matchingValue) {
-    clearPendingReport();
-    sendMessage({
-      type: 'error',
-      message: `Scenario '${report.scenario}' was not found in the Paizo form dropdown.`,
-    });
+    enterManualSelectionMode(report.scenario);
     return;
   }
 
@@ -267,6 +295,81 @@ function populateDateAndFlags(report: SessionReport): void {
   setCheckbox(SELECTORS.reportingB, report.reportingB);
   setCheckbox(SELECTORS.reportingC, report.reportingC);
   setCheckbox(SELECTORS.reportingD, report.reportingD);
+}
+
+/**
+ * Extracts CheckboxData from a NodeList of checkbox input elements.
+ *
+ * For each checkbox, reads the title attribute and the text content
+ * of the next sibling <td> element (the prestige label). Uses the
+ * checkbox name attribute as the identifier for DOM correlation.
+ */
+function extractCheckboxData(
+  checkboxes: NodeListOf<HTMLInputElement>,
+): CheckboxData[] {
+  const data: CheckboxData[] = [];
+  for (const checkbox of checkboxes) {
+    const title = checkbox.title;
+    const parentTd = checkbox.closest('td');
+    const siblingTd = parentTd?.nextElementSibling as HTMLTableCellElement | null;
+    const prestigeLabelText = siblingTd?.textContent?.trim() ?? null;
+
+    data.push({
+      title,
+      prestigeLabelText,
+      identifier: checkbox.name,
+    });
+  }
+  return data;
+}
+
+/**
+ * Populates special faction objective checkboxes based on bonusRepEarned data.
+ *
+ * Queries the DOM for GM and character faction objective checkboxes,
+ * extracts their data, delegates matching to processBonusReputation,
+ * then sets .checked = true on matched checkboxes and logs warnings.
+ */
+function populateBonusReputation(report: SessionReport): BonusRepResult {
+  const gmCheckboxes = document.querySelectorAll<HTMLInputElement>(
+    SELECTORS.gmFactionObjectiveCheckboxes,
+  );
+  const charCheckboxes = document.querySelectorAll<HTMLInputElement>(
+    SELECTORS.characterFactionObjectiveCheckboxes,
+  );
+
+  const gmCheckboxData = extractCheckboxData(gmCheckboxes);
+  const charCheckboxData = extractCheckboxData(charCheckboxes);
+
+  const result = processBonusReputation(
+    report.bonusRepEarned,
+    gmCheckboxData,
+    charCheckboxData,
+  );
+
+  for (const match of result.gmMatches) {
+    const checkbox = document.querySelector<HTMLInputElement>(
+      `input[name="${match.checkboxIdentifier}"]`,
+    );
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  }
+
+  for (const match of result.characterMatches) {
+    const checkbox = document.querySelector<HTMLInputElement>(
+      `input[name="${match.checkboxIdentifier}"]`,
+    );
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  }
+
+  for (const warning of result.warnings) {
+    console.warn(warning);
+  }
+
+  return result;
 }
 
 /**
@@ -329,14 +432,25 @@ function executePhase3(report: SessionReport): void {
 
   populateGmFields(report);
   populateDateAndFlags(report);
+  const bonusRepResult = populateBonusReputation(report);
   populatePlayerRows(report);
 
   clearPendingReport();
 
   const playerCount = extractPlayerSignUps(report.signUps).length;
+  let message = `Form filled successfully. ${playerCount} player row(s) populated.`;
+
+  if (bonusRepResult.matchedCount > 0) {
+    message += ` ${bonusRepResult.matchedCount} extra reputation faction(s) checked.`;
+  }
+
+  for (const warning of bonusRepResult.warnings) {
+    message += ` ${warning}`;
+  }
+
   sendMessage({
     type: 'success',
-    message: `Form filled successfully. ${playerCount} player row(s) populated.`,
+    message,
     scenario: report.scenario,
   });
 }
@@ -345,7 +459,8 @@ function executePhase3(report: SessionReport): void {
  * Entry point: called on page load.
  *
  * Checks sessionStorage for a Pending_Report. If present and not expired,
- * detects the current phase and executes it. If expired, clears and stops.
+ * detects the current phase and executes it. If expired, clears all state.
+ * If manual selection flag is set, notifies the popup and waits.
  */
 function onPageLoad(): void {
   const pendingReport = readPendingReport();
@@ -354,7 +469,13 @@ function onPageLoad(): void {
   }
 
   if (isExpired(pendingReport.timestamp)) {
-    clearPendingReport();
+    clearAllWorkflowState();
+    return;
+  }
+
+  const isManualSelection = sessionStorage.getItem(MANUAL_SELECTION_KEY) === 'true';
+  if (isManualSelection) {
+    sendMessage({ type: 'manualSelectionActive', scenario: pendingReport.report.scenario });
     return;
   }
 
@@ -381,12 +502,52 @@ function storePendingReport(pendingReport: PendingReport): void {
 }
 
 /**
+ * Handles the "Continue with Selected Scenario" action from the popup.
+ *
+ * Reads the pending report, validates that a scenario has been selected
+ * in the dropdown, clears the manual selection flag, and executes Phase 3.
+ * Sends an error if no report exists or no scenario is selected.
+ */
+function handleContinueWithScenario(): void {
+  const pendingReport = readPendingReport();
+  if (!pendingReport) {
+    sendMessage({ type: 'error', message: 'No pending report found.' });
+    return;
+  }
+
+  const scenarioSelect = document.querySelector<HTMLSelectElement>(
+    SELECTORS.scenarioSelect,
+  );
+  if (!isScenarioSelected(scenarioSelect?.value ?? '')) {
+    sendMessage({
+      type: 'error',
+      message: 'No scenario has been selected. Please select a scenario from the dropdown first.',
+    });
+    return;
+  }
+
+  sessionStorage.removeItem(MANUAL_SELECTION_KEY);
+  executePhase3(pendingReport.report);
+}
+
+/**
+ * Handles the "Cancel" action from the popup during manual selection.
+ * Clears all workflow state from sessionStorage.
+ */
+function handleCancelManualSelection(): void {
+  clearAllWorkflowState();
+}
+
+/**
  * Listen for messages from the background script.
  *
  * The 'fillForm' message triggers the workflow. If the message includes
  * a pendingReport, it is stored in sessionStorage before running the
- * workflow. This allows the popup to pass the report data through the
- * background script to the content script for storage.
+ * workflow. If forceManualScenario is true, the force-manual flag is
+ * stored for Phase 2 to consume after the Phase 1 reload.
+ *
+ * Also handles 'continueWithScenario' and 'cancelManualSelection'
+ * messages for the manual selection flow.
  */
 chrome.runtime.onMessage.addListener(
   (message: Record<string, unknown>) => {
@@ -394,7 +555,14 @@ chrome.runtime.onMessage.addListener(
       if (message.pendingReport) {
         storePendingReport(message.pendingReport as PendingReport);
       }
+      if (message.forceManualScenario === true) {
+        sessionStorage.setItem(FORCE_MANUAL_KEY, 'true');
+      }
       onPageLoad();
+    } else if (message.type === 'continueWithScenario') {
+      handleContinueWithScenario();
+    } else if (message.type === 'cancelManualSelection') {
+      handleCancelManualSelection();
     }
   },
 );

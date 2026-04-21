@@ -16,8 +16,7 @@ After running a Pathfinder Society game, GMs need to report the session on paizo
 ## Supported game systems
 
 - Pathfinder Society (second edition) — PFS2E
-
-Starfinder 2e support will be added in future releases.
+- Starfinder Society (second edition) — SFS2E
 
 ## How to use
 

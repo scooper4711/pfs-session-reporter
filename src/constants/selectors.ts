@@ -43,6 +43,10 @@ export const SELECTORS = {
 
 export const STORAGE_KEY = 'pfs_session_report_pending';
 
+export const MANUAL_SELECTION_KEY = 'pfs_manual_selection';
+
+export const FORCE_MANUAL_KEY = 'pfs_force_manual_scenario';
+
 export const TIMEOUT_MS = 30_000;
 
 export const GAME_SYSTEM_TO_SELECT_VALUE: Record<string, string> = {

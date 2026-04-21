@@ -8,7 +8,7 @@
  * @jest-environment jsdom
  */
 
-import { SELECTORS, STORAGE_KEY, GAME_SYSTEM_TO_SELECT_VALUE } from '../constants/selectors';
+import { SELECTORS, STORAGE_KEY, MANUAL_SELECTION_KEY, FORCE_MANUAL_KEY, GAME_SYSTEM_TO_SELECT_VALUE } from '../constants/selectors';
 import { SessionReport, PendingReport } from '../shared/types';
 
 // --- Mocks (must be set before content-script module loads) ---
@@ -547,7 +547,7 @@ describe('error handling', () => {
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
   });
 
-  it('sends error when scenario is not found in phase 2', () => {
+  it('enters manual selection mode when scenario is not found in phase 2', () => {
     document.body.innerHTML = `
       <form name="editObject">
         <select name="17.2.1.3.1.1.1.15">
@@ -568,8 +568,9 @@ describe('error handling', () => {
     messageHandler({ type: 'fillForm', pendingReport: pending });
 
     expect(sendMessageMock).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'error' }),
+      expect.objectContaining({ type: 'manualScenarioRequired', scenario: 'PFS2E 99-99' }),
     );
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY, 'true');
   });
 
   it('sends error when form is missing in phase 3', () => {
@@ -597,7 +598,7 @@ describe('error handling', () => {
     );
   });
 
-  it('clears expired pending reports', () => {
+  it('clears expired pending reports and all workflow state', () => {
     buildFormDom();
     const expiredPending: PendingReport = {
       report: createTestReport(),
@@ -608,5 +609,282 @@ describe('error handling', () => {
     messageHandler({ type: 'fillForm', pendingReport: expiredPending });
 
     expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(FORCE_MANUAL_KEY);
+  });
+});
+
+
+// --- Manual Selection Flow Helpers ---
+
+/**
+ * Sets up the form DOM in Phase 2 state (session type already selected,
+ * scenario not yet matched) with no matching scenario option.
+ */
+function setupPhase2DomNoMatch(): void {
+  document.body.innerHTML = `
+    <form name="editObject">
+      <select name="17.2.1.3.1.1.1.15">
+        <option value="">-- Select --</option>
+        <option value="4">Pathfinder Society (Second Edition)</option>
+      </select>
+      <select name="17.2.1.3.1.1.1.17">
+        <option value="">-- Select --</option>
+      </select>
+    </form>
+  `;
+  const sessionTypeSelect = document.querySelector<HTMLSelectElement>(SELECTORS.sessionTypeSelect);
+  sessionTypeSelect!.value = GAME_SYSTEM_TO_SELECT_VALUE['PFS2E'];
+}
+
+/**
+ * Sets up the form DOM in Phase 2 state with a matching scenario option.
+ */
+function setupPhase2DomWithMatch(): void {
+  buildFormDom();
+  const sessionTypeSelect = document.querySelector<HTMLSelectElement>(SELECTORS.sessionTypeSelect);
+  sessionTypeSelect!.value = GAME_SYSTEM_TO_SELECT_VALUE['PFS2E'];
+  const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+  scenarioSelect!.value = '';
+  const form = document.querySelector<HTMLFormElement>(SELECTORS.form);
+  form!.submit = jest.fn();
+}
+
+// --- Manual Selection Flow Tests ---
+
+describe('executePhase2 manual selection', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('enters manual mode when findScenarioOption returns null', () => {
+    setupPhase2DomNoMatch();
+    const pending = createPendingReport({ scenario: 'PFS2E 99-99' });
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+
+    messageHandler({ type: 'fillForm', pendingReport: pending });
+
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY, 'true');
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'manualScenarioRequired', scenario: 'PFS2E 99-99' }),
+    );
+  });
+
+  it('proceeds normally when findScenarioOption returns a match', () => {
+    setupPhase2DomWithMatch();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+
+    messageHandler({ type: 'fillForm', pendingReport: pending });
+
+    const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+    expect(scenarioSelect!.value).toBe(TEST_SCENARIO_OPTION_VALUE);
+    const form = document.querySelector<HTMLFormElement>(SELECTORS.form);
+    expect(form!.submit).toHaveBeenCalled();
+    expect(sendMessageMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'manualScenarioRequired' }),
+    );
+  });
+
+  it('enters manual mode when FORCE_MANUAL_KEY is set, regardless of match', () => {
+    setupPhase2DomWithMatch();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+
+    messageHandler({ type: 'fillForm', pendingReport: pending, forceManualScenario: true });
+
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY, 'true');
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'manualScenarioRequired', scenario: TEST_SCENARIO }),
+    );
+    // Force-manual flag should be removed after being consumed
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(FORCE_MANUAL_KEY);
+  });
+});
+
+describe('onPageLoad manual selection', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('sends manualSelectionActive when manual selection flag is set', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    messageHandler({ type: 'fillForm' });
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'manualSelectionActive', scenario: TEST_SCENARIO }),
+    );
+  });
+
+  it('clears all state when pending report is expired with manual flag set', () => {
+    buildFormDom();
+    const expiredPending: PendingReport = {
+      report: createTestReport(),
+      timestamp: Date.now() - 60_000,
+    };
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(expiredPending);
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    messageHandler({ type: 'fillForm', pendingReport: expiredPending });
+
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(FORCE_MANUAL_KEY);
+    expect(sendMessageMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'manualSelectionActive' }),
+    );
+  });
+});
+
+describe('handleContinueWithScenario', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('calls executePhase3 when scenario is selected', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    // Set scenario select to a non-default value (simulating user selection)
+    const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+    scenarioSelect!.value = TEST_SCENARIO_OPTION_VALUE;
+
+    messageHandler({ type: 'continueWithScenario' });
+
+    // Manual selection flag should be cleared
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY);
+    // Phase 3 should execute — pending report cleared and success sent
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'success' }),
+    );
+  });
+
+  it('sends error when no scenario selected', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    // Leave scenario select at default empty value
+    const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+    scenarioSelect!.value = '';
+
+    messageHandler({ type: 'continueWithScenario' });
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'error',
+        message: 'No scenario has been selected. Please select a scenario from the dropdown first.',
+      }),
+    );
+  });
+
+  it('sends error when no pending report exists', () => {
+    buildFormDom();
+
+    messageHandler({ type: 'continueWithScenario' });
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'error',
+        message: 'No pending report found.',
+      }),
+    );
+  });
+});
+
+describe('handleCancelManualSelection', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('clears all workflow state', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    messageHandler({ type: 'cancelManualSelection' });
+
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(FORCE_MANUAL_KEY);
+  });
+});
+
+describe('message listener manual selection messages', () => {
+  beforeEach(() => {
+    clearMocksAndStorage();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('handles continueWithScenario message', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(pending);
+
+    const scenarioSelect = document.querySelector<HTMLSelectElement>(SELECTORS.scenarioSelect);
+    scenarioSelect!.value = TEST_SCENARIO_OPTION_VALUE;
+
+    messageHandler({ type: 'continueWithScenario' });
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'success' }),
+    );
+  });
+
+  it('handles cancelManualSelection message', () => {
+    buildFormDom();
+    mockSessionStorage[STORAGE_KEY] = JSON.stringify(createPendingReport());
+    mockSessionStorage[MANUAL_SELECTION_KEY] = 'true';
+
+    messageHandler({ type: 'cancelManualSelection' });
+
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(MANUAL_SELECTION_KEY);
+  });
+
+  it('stores FORCE_MANUAL_KEY when fillForm has forceManualScenario true', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+
+    messageHandler({ type: 'fillForm', pendingReport: pending, forceManualScenario: true });
+
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith(FORCE_MANUAL_KEY, 'true');
+  });
+
+  it('does not store FORCE_MANUAL_KEY when fillForm has no forceManualScenario', () => {
+    buildFormDom();
+    const pending = createPendingReport();
+
+    messageHandler({ type: 'fillForm', pendingReport: pending });
+
+    expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith(FORCE_MANUAL_KEY, 'true');
   });
 });

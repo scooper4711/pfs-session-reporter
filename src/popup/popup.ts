@@ -15,6 +15,10 @@ interface PopupElements {
   fillButton: HTMLButtonElement;
   loading: HTMLElement;
   status: HTMLElement;
+  manualSelection: HTMLElement;
+  manualScenarioName: HTMLElement;
+  continueButton: HTMLButtonElement;
+  cancelButton: HTMLButtonElement;
 }
 
 /**
@@ -25,12 +29,20 @@ function getPopupElements(): PopupElements | null {
   const fillButton = document.querySelector<HTMLButtonElement>('#fillButton');
   const loading = document.querySelector<HTMLElement>('#loading');
   const status = document.querySelector<HTMLElement>('#status');
+  const manualSelection = document.querySelector<HTMLElement>('#manualSelection');
+  const manualScenarioName = document.querySelector<HTMLElement>('#manualScenarioName');
+  const continueButton = document.querySelector<HTMLButtonElement>('#continueButton');
+  const cancelButton = document.querySelector<HTMLButtonElement>('#cancelButton');
 
-  if (!fillButton || !loading || !status) {
+  if (!fillButton || !loading || !status || !manualSelection
+      || !manualScenarioName || !continueButton || !cancelButton) {
     return null;
   }
 
-  return { fillButton, loading, status };
+  return {
+    fillButton, loading, status,
+    manualSelection, manualScenarioName, continueButton, cancelButton,
+  };
 }
 
 /**
@@ -79,6 +91,27 @@ function showNotOnPaizoPage(elements: PopupElements): void {
     'Navigate to the Paizo session reporting page to use this extension.';
   elements.status.className = 'status error';
   elements.status.classList.remove('hidden');
+}
+
+/**
+ * Shows the manual selection panel with the unmatched scenario name.
+ * Hides the fill button, loading indicator, and status area.
+ */
+function showManualSelection(elements: PopupElements, scenario: string): void {
+  elements.fillButton.classList.add('hidden');
+  elements.loading.classList.add('hidden');
+  elements.status.classList.add('hidden');
+  elements.manualSelection.classList.remove('hidden');
+  elements.manualScenarioName.textContent = scenario;
+}
+
+/**
+ * Hides the manual selection panel and re-shows the fill button.
+ */
+function hideManualSelection(elements: PopupElements): void {
+  elements.manualSelection.classList.add('hidden');
+  elements.fillButton.classList.remove('hidden');
+  elements.fillButton.disabled = false;
 }
 
 /**
@@ -133,11 +166,18 @@ function createPendingReport(report: SessionReport): PendingReport {
  * script, which forwards it to the content script. The content script
  * stores the PendingReport in sessionStorage and starts the workflow.
  */
-function sendFillFormMessage(pendingReport: PendingReport): void {
-  chrome.runtime.sendMessage({
+function sendFillFormMessage(
+  pendingReport: PendingReport,
+  forceManualScenario?: boolean,
+): void {
+  const message: Record<string, unknown> = {
     type: 'fillForm',
     pendingReport,
-  });
+  };
+  if (forceManualScenario) {
+    message.forceManualScenario = true;
+  }
+  chrome.runtime.sendMessage(message);
 }
 
 /**
@@ -159,13 +199,14 @@ async function checkActiveTabUrl(): Promise<boolean> {
  * creates a PendingReport, and sends it to the content script
  * to begin the form-filling workflow.
  */
-async function handleFillClick(elements: PopupElements): Promise<void> {
+async function handleFillClick(elements: PopupElements, event: MouseEvent): Promise<void> {
   showLoading(elements);
 
   try {
     const report = await readAndParseClipboard();
     const pendingReport = createPendingReport(report);
-    sendFillFormMessage(pendingReport);
+    const forceManualScenario = event.altKey;
+    sendFillFormMessage(pendingReport, forceManualScenario);
     hideLoading(elements);
   } catch (error: unknown) {
     const message = error instanceof Error
@@ -188,7 +229,13 @@ function listenForContentScriptMessages(elements: PopupElements): void {
           : '';
         showSuccess(elements, `${String(message.message)}${scenarioInfo}`);
       } else if (message.type === 'error') {
+        hideManualSelection(elements);
         showError(elements, String(message.message));
+      } else if (
+        message.type === 'manualScenarioRequired'
+        || message.type === 'manualSelectionActive'
+      ) {
+        showManualSelection(elements, String(message.scenario));
       }
     },
   );
@@ -213,8 +260,17 @@ async function initializePopup(): Promise<void> {
     return;
   }
 
-  elements.fillButton.addEventListener('click', () => {
-    handleFillClick(elements);
+  elements.fillButton.addEventListener('click', (event: MouseEvent) => {
+    handleFillClick(elements, event);
+  });
+
+  elements.continueButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'continueWithScenario' });
+  });
+
+  elements.cancelButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'cancelManualSelection' });
+    hideManualSelection(elements);
   });
 
   listenForContentScriptMessages(elements);

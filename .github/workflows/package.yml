@@ -22,6 +22,21 @@ jobs:
 
       - run: npm ci
 
+      # Versioning strategy:
+      #   - package.json gets the full semver from the tag (e.g. 1.0.0-beta.1)
+      #   - manifest.json gets the base version only (e.g. 1.0.0) because Chrome
+      #     requires dot-separated integers and does not support pre-release suffixes.
+      #   - Beta releases are distributed only via GitHub Releases (as pre-releases).
+      #   - Stable releases go to both GitHub Releases and the Chrome Web Store.
+      #   - Because betas never reach the store, stripping the suffix is safe —
+      #     the store only ever sees strictly increasing stable versions.
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm pkg set version="$VERSION"
+          MANIFEST_VERSION=$(echo "$VERSION" | sed 's/-.*$//')
+          sed -i "s/\"version\": \".*\"/\"version\": \"$MANIFEST_VERSION\"/" src/manifest.json
+
       - run: npm run lint
 
       - run: npm test -- --silent
@@ -36,3 +51,4 @@ jobs:
         with:
           files: pfs-session-reporter-${{ github.ref_name }}.zip
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, 'beta') }}

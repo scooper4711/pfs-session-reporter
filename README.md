@@ -27,7 +27,13 @@ After running a Pathfinder Society game, GMs need to report the session on paizo
 
 ## Installation
 
-### From a release (recommended)
+### From the Chrome Web Store (recommended)
+
+The extension has been submitted to the [Chrome Web Store](https://chromewebstore.google.com/detail/pfs-session-reporter/mhfkjabbfmolcpaimeanfajgfjinopmn) and is pending review. Once approved, you can install it directly from there with automatic updates.
+
+### From a GitHub release
+
+You can also install manually from a release zip. This is useful for beta testing pre-release versions that aren't published to the store.
 
 1. Go to the [Releases](../../releases) page and download the `.zip` file from the latest release
 2. Unzip the file to a folder on your computer (remember where you put it)

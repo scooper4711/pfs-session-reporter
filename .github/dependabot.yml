@@ -15,8 +15,29 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # Security updates aren't taken by the version-update groups above; group them too.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      # The test tooling doesn't support TypeScript 7 yet; hold majors until it does.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+      # Security updates aren't taken by the version-update groups above; group them too.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
